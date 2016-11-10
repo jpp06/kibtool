@@ -23,7 +23,8 @@ Builds
 ======
 
 
-.. image:: https://travis-ci.org/jpparis-orange/kibtool.svg?branch=master :target: https://travis-ci.org/jpparis-orange/kibtool
+.. image:: https://travis-ci.org/jpparis-orange/kibtool.svg?branch=master
+           :target: https://travis-ci.org/jpparis-orange/kibtool
 
 
 Getting started
