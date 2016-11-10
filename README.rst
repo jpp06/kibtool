@@ -19,6 +19,13 @@ No extensive tests have been donne so far, and the dependency matrix represents 
 | first  |    yes    |    yes     |    yes    |
 +--------+-----------+------------+-----------+
 
+Builds
+======
+
++--------+-----------+
+| master | [![Build Status](https://travis-ci.org/jpparis-orange/kibtool.svg?branch=master)](https://travis-ci.org/jpparis-orange/kibtool) |
++--------+-----------+
+
 Getting started
 ---------------
 
