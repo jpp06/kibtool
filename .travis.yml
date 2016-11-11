@@ -8,5 +8,6 @@ install:
   - pip install .
 
 script:
-  - python setup.py test
+  - python test/run_test.py
+
 
