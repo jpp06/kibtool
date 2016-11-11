@@ -8,6 +8,6 @@ install:
   - pip install .
 
 script:
-  - python test/run_test.py
+  - ./travis-run.sh
 
 
