@@ -8,5 +8,5 @@ install:
   - pip install .
 
 script:
-  - exit 0
- 
+  - python setup.py test
+
