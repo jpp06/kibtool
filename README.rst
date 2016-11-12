@@ -43,7 +43,7 @@ Getting started
 * In the root directory of the project, run ``kibtool.py --help`` to show usage
   information.
 
-.. _Python Elasticsearch Client: <https://github.com/elastic/elasticsearch-py>
+.. _Python Elasticsearch Client: https://github.com/elastic/elasticsearch-py
 
 Examples
 --------
