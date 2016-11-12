@@ -20,7 +20,7 @@ def run_all(argv=None):
 
   nose.run_exit(
     argv=argv,
-    defaultTest=abspath(dirname(__file__))+"/unit"
+    defaultTest=abspath(dirname(__file__))
   )
 
 if __name__ == '__main__':
