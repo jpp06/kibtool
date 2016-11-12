@@ -15,7 +15,7 @@ No extensive tests have been donne so far, and the dependency matrix represents 
 own envrionment.
 
 +--------+-----------+------------+-----------+
-|Version | ES 2.4.x  | PyES 1.0.0 | Kib 4.6.1 |
+|Version | ES 2.4.x  | PyES 2.4.0 | Kib 4.6.1 |
 +========+===========+============+===========+
 | first  |    yes    |    yes     |    yes    |
 +--------+-----------+------------+-----------+
@@ -24,7 +24,13 @@ Builds
 ------
 
 
-.. image:: https://travis-ci.org/jpparis-orange/kibtool.svg?branch=master
++--------+----------+
+| Branch | Status   |
++========+==========+
+| Master | |master| |
++--------+----------+
+
+.. |master| image:: https://travis-ci.org/jpparis-orange/kibtool.svg?branch=master
            :target: https://travis-ci.org/jpparis-orange/kibtool
 
 
@@ -32,11 +38,12 @@ Getting started
 ---------------
 
 * Fork the repo and run from source.
-* If not installed already, you will need
-  `Python Elasticsearch Client <https://github.com/elastic/elasticsearch-py>`_. I'm
-  currently using 1.0.0.
+* If not installed already, you will need `Python Elasticsearch Client`_. I'm
+  currently using 2.4.0.
 * In the root directory of the project, run ``kibtool.py --help`` to show usage
   information.
+
+.. _Python Elasticsearch Client: <https://github.com/elastic/elasticsearch-py>
 
 Examples
 --------
