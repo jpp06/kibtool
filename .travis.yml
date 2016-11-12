@@ -8,4 +8,4 @@ install:
   - pip install .
 
 script:
-  - (cd test; ./run_tests.py)
+  - python setup.py test
