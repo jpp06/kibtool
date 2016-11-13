@@ -24,14 +24,17 @@ Builds
 ------
 
 
-+--------+----------+
-| Branch | Status   |
-+========+==========+
-| Master | |master| |
-+--------+----------+
++--------+----------+-------------+
+| Branch | Status   | Coverage    |
++========+==========+=============+
+| Master | |master| | |masterCov| |
++--------+----------+-------------+
 
 .. |master| image:: https://travis-ci.org/jpparis-orange/kibtool.svg?branch=master
-           :target: https://travis-ci.org/jpparis-orange/kibtool
+                    :target: https://travis-ci.org/jpparis-orange/kibtool
+
+.. |masterCov| image:: https://coveralls.io/repos/github/jpparis-orange/kibtool/badge.svg
+                       :target: https://coveralls.io/github/jpparis-orange/kibtool
 
 
 Getting started
