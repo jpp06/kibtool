@@ -64,3 +64,11 @@ Examples
 * ``./kibtool.py --kibfrom .kibana_src --dashid 'my-:-dashboard' --kibto .kibana_dest --copy``
   copy dashboard identified by ``my-:-dashboard`` to ``.kibana_dst``.
 
+Thanks
+------
+
+I have copied/adapted lots of things from `curator project`_. Many thanks to `untergeek`_ and other participants:
+you've boosted my leaning curve.
+
+.. _curator project: https://github.com/elastic/curator/
+.. _untergeek: https://github.com/untergeek
