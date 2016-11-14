@@ -76,7 +76,7 @@ try:
       "Programming Language :: Python :: 3.4",
     ],
     test_suite = "test.run_tests.run_all",
-    tests_require = ["mock", "nose", "coverage", "nosexcover"],
+    tests_require = ["mock", "nose", "coverage", "nosexcover", "python-coveralls"],
     options = {"build_exe" : buildOptions},
     executables = [kibtool_exe]
   )
@@ -108,5 +108,5 @@ except ImportError:
         "Programming Language :: Python :: 3.4",
     ],
     test_suite = "test.run_tests.run_all",
-    tests_require = ["mock", "nose", "coverage", "nosexcover"]
+    tests_require = ["mock", "nose", "coverage", "nosexcover", "python-coveralls"]
   )
