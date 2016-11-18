@@ -11,6 +11,10 @@ import kibtool
 
 from . import KibtoolTestCase
 
+# suppress console err message from http connections
+import logging
+logging.getLogger("elasticsearch").setLevel(logging.ERROR)
+
 host, port = os.environ.get('TEST_ES_SERVER', 'localhost:9200').split(':')
 port = int(port) if port else 9200
 
