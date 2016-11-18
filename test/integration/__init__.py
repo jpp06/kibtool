@@ -13,6 +13,10 @@ from elasticsearch.exceptions import ConnectionError
 
 from unittest import SkipTest, TestCase
 
+# suppress console err message from http connections
+import logging
+logging.getLogger("elasticsearch").setLevel(logging.ERROR)
+
 client = None
 
 
