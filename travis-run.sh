@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 
 # There's at least 1 expected, skipped test, only with 5.0.0-alpha4 right now
 expected_skips=0
