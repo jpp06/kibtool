@@ -66,6 +66,9 @@ class KibtoolTestCase(TestCase):
     self.client.cluster.health(wait_for_status='yellow')
     self.add_kibana_base_docs(l_src)
     self.add_kibana_dashboard_docs(l_src)
+    self.add_kibana_visualization_docs(l_src)
+    self.add_kibana_search_docs(l_src)
+    self.add_kibana_index_pattern_docs(l_src)
     self.add_kibana_base_docs(l_dst)
     self.client.indices.flush(index=l_src, force=True)
     self.client.indices.flush(index=l_dst, force=True)
@@ -102,10 +105,50 @@ class KibtoolTestCase(TestCase):
       "kibanaSavedObjectMeta": {
         "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}]}"
       },
-      "panelsJSON": "[]"
+      "panelsJSON": "[{\"id\":\"visualization-1\",\"type\":\"visualization\",\"panelIndex\":1,\"size_x\":3,\"size_y\":2,\"col\":1,\"row\":1}]",
     }
     self.client.create(
       index=p_idx, doc_type="dashboard", id="dashboard-1", body=l_body,
+    )
+  def add_kibana_visualization_docs(self, p_idx):
+    l_body = {
+      "title": "visualization 1",
+      "visState": "{\"title\":\"New Visualization\",\"type\":\"histogram\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"scale\":\"linear\",\"mode\":\"stacked\",\"times\":[],\"addTimeMarker\":false,\"defaultYExtents\":false,\"setYExtents\":false,\"yAxis\":{}},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}}],\"listeners\":{}}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "savedSearchId": "search-1",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[]}"
+      }
+    }
+    self.client.create(
+      index=p_idx, doc_type="visualization", id="visualization-1", body=l_body,
+    )
+  def add_kibana_search_docs(self, p_idx):
+    l_body = {
+      "title": "search 1",
+      "description": "",
+      "hits": 0,
+      "columns": [ "field", "_id" ],
+      "sort": [ "@timestamp", "desc" ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"index-pattern-1\",\"filter\":[],\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"require_field_match\":false,\"fragment_size\":2147483647},\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}"
+      }
+    }
+    self.client.create(
+      index=p_idx, doc_type="search", id="search-1", body=l_body,
+    )
+  def add_kibana_index_pattern_docs(self, p_idx):
+    l_body = {
+      "title": "index-pattern-1",
+      "timeFieldName": "@timestamp",
+      "fields": "[{\"name\":\"_index\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"field\",\"type\":\"string\",\"count\":1,\"scripted\":false,\"indexed\":true,\"analyzed\":true,\"doc_values\":false},{\"name\":\"_source\",\"type\":\"_source\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"_id\",\"type\":\"string\",\"count\":1,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"_type\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"_score\",\"type\":\"number\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"@timestamp\",\"type\":\"date\",\"count\":0,\"scripted\":false,\"indexed\":true,\"analyzed\":false,\"doc_values\":true}]",
+      "fieldFormatMap": "{\"@timestamp\":{\"id\":\"date\",\"params\":{\"pattern\":\"DD/MM/YYYY, HH:mm\"}}}"
+    }
+    self.client.create(
+      index=p_idx, doc_type="index-pattern", id="index-pattern-1", body=l_body,
     )
 
 
