@@ -54,17 +54,26 @@ class IndexPattern(KObject):
 class Search(KObject):
   def __init__(self, p_es, p_index, p_id):
     super().__init__(p_es, p_index, "search", p_id)
+  def getDepend(self):
+    self.readFromEs()
+    l_searchSource = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
+    if "index" in l_searchSource:
+      return [ IndexPattern(self.m_es, self.m_index, l_searchSource["index"]) ]
 
 class Visualization(KObject):
   def __init__(self, p_es, p_index, p_id):
     super().__init__(p_es, p_index, "visualization", p_id)
   def getDepend(self):
     self.readFromEs()
+    l_result = set()
+    if "savedSearchId" in self.m_json["_source"]:
+      l_search = Search(self.m_es, self.m_index, self.m_json["_source"]["savedSearchId"])
+      l_result.add(l_search)
+      l_result.update(l_search.getDepend())
     l_searchSource = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
     if "index" in l_searchSource:
-      return [ IndexPattern(self.m_es, self.m_index, l_searchSource["index"]) ]
-    else:
-      return []
+      l_result.add(IndexPattern(self.m_es, self.m_index, l_searchSource["index"]))
+    return l_result
 
 class Dashboard(KObject):
   def __init__(self, p_es, p_index, p_id):
