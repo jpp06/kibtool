@@ -18,8 +18,6 @@ import logging
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 client = None
-
-
 host, port = os.environ.get('TEST_ES_SERVER', 'localhost:9200').split(':')
 port = int(port) if port else 9200
 
@@ -45,9 +43,6 @@ def get_client():
 def setup():
   get_client()
 
-class Args(dict):
-    def __getattr__(self, att_name):
-        return self.get(att_name, None)
 
 class KibtoolTestCase(TestCase):
   def setUp(self):
@@ -62,9 +57,20 @@ class KibtoolTestCase(TestCase):
   def tearDown(self):
     self.client.indices.delete(index=self.args["prefix"] + '*')
 
-  def create_indices(self, count, unit=None):
-    self.create_index(self.args['prefix'] + datetime(d.year, d.month, 1).strftime(format), wait_for_yellow=False)
+
+  def create_indices(self):
+    l_src = self.args['prefix'] + "src"
+    l_dst = self.args['prefix'] + "dst"
+    self.create_index(l_src, wait_for_yellow=False)
+    self.create_index(l_dst, wait_for_yellow=False)
     self.client.cluster.health(wait_for_status='yellow')
+    self.add_kibana_base_docs(l_src)
+    self.add_kibana_dashboard_docs(l_src)
+    self.add_kibana_base_docs(l_dst)
+    self.client.indices.flush(index=l_src, force=True)
+    self.client.indices.flush(index=l_dst, force=True)
+    return l_src, l_dst
+
 
   def create_index(self, name, shards=1, wait_for_yellow=True):
     self.client.indices.create(
@@ -74,18 +80,34 @@ class KibtoolTestCase(TestCase):
     if wait_for_yellow:
       self.client.cluster.health(wait_for_status='yellow')
 
-  def add_docs(self, idx):
-    for i in ["1", "2", "3"]:
-      self.client.create(
-        index=idx, doc_type='log', id=i,
-        body={"doc" + i :'TEST DOCUMENT'},
-      )
-      # This should force each doc to be in its own segment.
-      self.client.indices.flush(index=idx, force=True)
+
+  def add_kibana_base_docs(self, p_idx):
+    l_body = {
+      "buildNum": 10146
+    }
+    self.client.create(
+      index=p_idx, doc_type="config", id="4.6.1", body=l_body,
+    )
+  def add_kibana_dashboard_docs(self, p_idx):
+    l_body = {
+      "timeFrom": "now-1y",
+      "title": "dashboard 1",
+      "uiStateJSON": "{}",
+      "timeRestore": True,
+      "optionsJSON": "{\"darkTheme\":false}",
+      "version": 1,
+      "timeTo": "now",
+      "description": "",
+      "hits": 0,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}]}"
+      },
+      "panelsJSON": "[]"
+    }
+    self.client.create(
+      index=p_idx, doc_type="dashboard", id="dashboard-1", body=l_body,
+    )
+
 
   def close_index(self, name):
     self.client.indices.close(index=name)
-
-  def write_config(self, fname, data):
-    with open(fname, 'w') as f:
-      f.write(data)
