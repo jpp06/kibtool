@@ -177,5 +177,9 @@ class KibTool(object):
       help="force replacement of existing objects.",
     )
 
-    return l_parser.parse_args(p_args[1:])
-
+    l_result = l_parser.parse_args(p_args[1:])
+    if l_result:
+      if l_result.dash or l_result.dashid:
+        return l_result
+      else:
+        l_parser.error("the following arguments are required: --dash or --dashid")

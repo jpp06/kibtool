@@ -26,10 +26,13 @@ class TestNone(KibtoolTestCase):
     )
 
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
-      l_kibtool = kibtool.KibTool(["./test_kibtool"])
-      l_kibtool.execute()
+      with self.assertRaises(SystemExit) as w_se:
+        l_kibtool = kibtool.KibTool(["./test_kibtool"])
+        self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
-      self.assertEquals(fake_err.getvalue().strip(), "")
+      l_err = fake_err.getvalue().strip()
+      self.assertEquals(l_err[:7], "usage: ")
+      self.assertRegex(l_err, " required: --dash or --dashid$")
 
     self.assertEquals(
       [],
@@ -43,13 +46,15 @@ class TestNone(KibtoolTestCase):
     )
 
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
-      l_kibtool = kibtool.KibTool(["./test_kibtool",
-                                   "--kibfrom", self.args["prefix"] + "zzz",
-                                   "--print"])
-      l_kibtool.execute()
+      with self.assertRaises(SystemExit) as w_se:
+        l_kibtool = kibtool.KibTool(["./test_kibtool",
+                                     "--kibfrom", self.args["prefix"] + "zzz"
+                                     "--print"])
+        self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
-      self.assertEquals(fake_err.getvalue().strip(), "")
-
+      l_err = fake_err.getvalue().strip()
+      self.assertEquals(l_err[:7], "usage: ")
+      self.assertRegex(l_err, " required: --dash or --dashid$")
 
     self.assertEquals(
       [],

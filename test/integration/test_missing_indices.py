@@ -29,7 +29,6 @@ class TestMissingIndices(KibtoolTestCase):
         self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
       self.assertEquals(fake_err.getvalue().strip(), "*** Can't search in unknown index _my_dummy_index_")
-      print(w_se.exception)
 
     self.assertEquals([], list(self.client.indices.get(self.args["prefix"] + "*").keys()))
 
@@ -45,7 +44,6 @@ class TestMissingIndices(KibtoolTestCase):
         self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
       self.assertEquals(fake_err.getvalue().strip(), "*** Can't write to unknown index _my_dummy_index_")
-      print(w_se.exception)
 
     self.assertEquals(
       ['kibtool-dst', 'kibtool-src'],
