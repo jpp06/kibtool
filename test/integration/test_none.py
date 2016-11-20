@@ -75,7 +75,6 @@ class TestNone(KibtoolTestCase):
       [],
       list(self.client.indices.get(self.args["prefix"] + "*").keys())
     )
-  @raises(exceptions.NotFoundError)
   def test_no_index_dash(self):
     self.assertEquals(
       [],
@@ -87,9 +86,11 @@ class TestNone(KibtoolTestCase):
                                    "--kibfrom", self.args["prefix"] + "zzz",
                                    "--dash", "zzz",
                                    "--print"])
-      l_kibtool.execute()
+      with self.assertRaises(SystemExit) as w_se:
+        l_kibtool.execute()
+        self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
-      self.assertEquals(fake_err.getvalue().strip(), "")
+      self.assertEquals(fake_err.getvalue().strip(), "*** Can't search in unknown index kibtool-zzz")
 
     self.assertEquals(
       [],
