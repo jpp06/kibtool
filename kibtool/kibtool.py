@@ -53,7 +53,11 @@ class KibTool(object):
     }
     if self.m_args.debug:
       print("---", l_request)
-    l_response = self.m_esfrom.search(index=self.m_args.kibfrom, doc_type="dashboard", body=l_request)
+    try:
+      l_response = self.m_esfrom.search(index=self.m_args.kibfrom, doc_type="dashboard", body=l_request)
+    except exceptions.NotFoundError:
+      print("*** Can't search in unknown index", self.m_args.kibfrom, file=sys.stderr)
+      sys.exit(1)
     l_result = []
     if 0 == l_response["hits"]["total"]:
       print("*** No dashboard found for '%s' in index %s/%s" %

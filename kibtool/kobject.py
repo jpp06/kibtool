@@ -44,6 +44,9 @@ class KObject(object):
         l_response = p_esTo.create(index = p_indexTo, doc_type=self.m_type, id=self.m_id, body=self.m_json["_source"])
     except exceptions.ConflictError as e:
       print("*** Can not create '%s' in index '%s'" % (self.m_id, p_indexTo), file=sys.stderr)
+    except exceptions.RequestError as e:
+      print("*** Can't write to unknown index", p_indexTo, file=sys.stderr)
+      sys.exit(1)
 
 class Config(KObject):
   def __init__(self, p_es, p_index, p_id):
