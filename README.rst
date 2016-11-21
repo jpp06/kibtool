@@ -68,7 +68,7 @@ Thanks
 ------
 
 I have copied/adapted lots of things from `curator project`_. Many thanks to `untergeek`_ and other participants:
-you've boosted my leaning curve.
+you've boosted my learning curve.
 
 .. _curator project: https://github.com/elastic/curator/
 .. _untergeek: https://github.com/untergeek
