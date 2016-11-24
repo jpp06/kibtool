@@ -113,7 +113,7 @@ class KibTool(object):
       else:
         for c_obj in l_dependsL + l_kobjs:
           if self.m_args.debug:
-            print("---", c_obj.m_type, c_obj.m_id)
+            print("---", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
           c_obj.copyFromTo(self.m_esto, self.m_args.kibto, self.m_args.force)
 
     # check for default index pattern

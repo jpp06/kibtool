@@ -13,10 +13,11 @@ class KObject(object):
     self.m_index = p_index
     self.m_type = p_type
     self.m_id = p_id
+    self.m_idUtf8 = str(p_id.encode("utf-8"))[1:].strip("'")
     self.m_json = None
 
   def __str__(self):
-    return self.m_index + "/" + self.m_type + "/" + self.m_id
+    return self.m_index + "/" + self.m_type + "/" + self.m_idUtf8
   def __hash__(self):
     return hash((self.m_index, self.m_type, self.m_id))
   def __eq__(self, p_other):
@@ -43,7 +44,7 @@ class KObject(object):
       else:
         l_response = p_esTo.create(index = p_indexTo, doc_type=self.m_type, id=self.m_id, body=self.m_json["_source"])
     except exceptions.ConflictError as e:
-      print("*** Can not create '%s' in index '%s'" % (self.m_id, p_indexTo), file=sys.stderr)
+      print("*** Can not create '%s' in index '%s'" % (self.m_idUtf8, p_indexTo), file=sys.stderr)
     except exceptions.RequestError as e:
       print("*** Can't write to unknown index", p_indexTo, file=sys.stderr)
       sys.exit(1)
