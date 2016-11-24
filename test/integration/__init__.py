@@ -57,22 +57,21 @@ class KibtoolTestCase(TestCase):
   def tearDown(self):
     self.client.indices.delete(index=self.args["prefix"] + '*')
 
-
   def create_indices(self):
-    l_src = self.args['prefix'] + "src"
-    l_dst = self.args['prefix'] + "dst"
-    self.create_index(l_src, wait_for_yellow=False)
-    self.create_index(l_dst, wait_for_yellow=False)
+    return self._create_indices(self.args['prefix'] + "src", self.args['prefix'] + "dst")
+  def _create_indices(self, p_src, p_dst):
+    self.create_index(p_src, wait_for_yellow=False)
+    self.create_index(p_dst, wait_for_yellow=False)
     self.client.cluster.health(wait_for_status='yellow')
-    self.add_kibana_base_docs(l_src)
-    self.add_kibana_dashboard_docs(l_src)
-    self.add_kibana_visualization_docs(l_src)
-    self.add_kibana_search_docs(l_src)
-    self.add_kibana_index_pattern_docs(l_src)
-    self.add_kibana_base_docs(l_dst)
-    self.client.indices.flush(index=l_src, force=True)
-    self.client.indices.flush(index=l_dst, force=True)
-    return l_src, l_dst
+    self.add_kibana_base_docs(p_src)
+    self.add_kibana_dashboard_docs(p_src)
+    self.add_kibana_visualization_docs(p_src)
+    self.add_kibana_search_docs(p_src)
+    self.add_kibana_index_pattern_docs(p_src)
+    self.add_kibana_base_docs(p_dst)
+    self.client.indices.flush(index=p_src, force=True)
+    self.client.indices.flush(index=p_dst, force=True)
+    return p_src, p_dst
 
 
   def create_index(self, name, shards=1, wait_for_yellow=True):
@@ -110,6 +109,24 @@ class KibtoolTestCase(TestCase):
     self.client.create(
       index=p_idx, doc_type="dashboard", id="dashboard-1", body=l_body,
     )
+    l_body = {
+      "timeFrom": "now-1y",
+      "title": "dashboard 8",
+      "uiStateJSON": "{}",
+      "timeRestore": True,
+      "optionsJSON": "{\"darkTheme\":false}",
+      "version": 1,
+      "timeTo": "now",
+      "description": "",
+      "hits": 0,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}]}"
+      },
+      "panelsJSON": "[{\"id\":\"visualizàtion-8\",\"type\":\"visualization\",\"panelIndex\":1,\"size_x\":3,\"size_y\":2,\"col\":1,\"row\":1}]",
+    }
+    self.client.create(
+      index=p_idx, doc_type="dashboard", id="dashboard-8", body=l_body,
+    )
   def add_kibana_visualization_docs(self, p_idx):
     l_body = {
       "title": "visualization 1",
@@ -124,6 +141,20 @@ class KibtoolTestCase(TestCase):
     }
     self.client.create(
       index=p_idx, doc_type="visualization", id="visualization-1", body=l_body,
+    )
+    l_body = {
+      "title": "visualizàtion 8",
+      "visState": "{\"title\":\"New Visualization\",\"type\":\"histogram\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"scale\":\"linear\",\"mode\":\"stacked\",\"times\":[],\"addTimeMarker\":false,\"defaultYExtents\":false,\"setYExtents\":false,\"yAxis\":{}},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}}],\"listeners\":{}}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "savedSearchId": "search-1",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[]}"
+      }
+    }
+    self.client.create(
+      index=p_idx, doc_type="visualization", id="visualizàtion-8", body=l_body,
     )
   def add_kibana_search_docs(self, p_idx):
     l_body = {
