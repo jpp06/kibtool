@@ -98,4 +98,3 @@ class Dashboard(KObject):
               file=sys.stderr)
         sys.exit(1)
     return l_result
- 

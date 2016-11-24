@@ -25,15 +25,19 @@ class KibTool(object):
       print("--- debug: end arg list", file=sys.stderr)
 
     try:
+      if self.m_args.esfrom.startswith("http://"):
+        self.m_args.esfrom = self.m_args.esfrom[7:]
       self.m_args.hostfrom, self.m_args.portfrom = self.m_args.esfrom.split(":")
-    except:
+    except ValueError as e:
       print("*** bad host:port for Elasticsearch", self.m_args.esfrom, file=sys.stderr)
       sys.exit(1)
     self.m_esfrom = Elasticsearch(hosts=[{ "host": self.m_args.hostfrom, "port": self.m_args.portfrom}],
                                   max_retries=2, timeout=200)
     try:
+      if self.m_args.esto.startswith("http://"):
+        self.m_args.esto = self.m_args.esto[7:]
       self.m_args.hostto, self.m_args.portto = self.m_args.esto.split(":")
-    except:
+    except ValueError as e:
       print("*** bad host:port for Elasticsearch", self.m_args.esto, file=sys.stderr)
       sys.exit(1)
     self.m_esto = Elasticsearch(hosts=[{ "host": self.m_args.hostto, "port": self.m_args.portto}],
