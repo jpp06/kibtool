@@ -19,7 +19,7 @@ host, port = os.environ.get('TEST_ES_SERVER', 'localhost:9200').split(':')
 port = int(port) if port else 9200
 
 class TestCopy(KibtoolTestCase):
-  def test_copy_dash(self):
+  def test_copy_dashid(self):
     (l_srcName, l_dstName) = self.create_indices()
 
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
@@ -38,7 +38,7 @@ class TestCopy(KibtoolTestCase):
     self.assertEquals(l_dstIdx, l_dstName)
     self.assertEquals(l_src, l_dst)
 
-  def test_copy_dashid(self):
+  def test_copy_dash(self):
     (l_srcName, l_dstName) = self.create_indices()
 
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
@@ -57,7 +57,7 @@ class TestCopy(KibtoolTestCase):
     self.assertEquals(l_dstIdx, l_dstName)
     self.assertEquals(l_src, l_dst)
 
-  def test_copy_dash_depend(self):
+  def test_copy_dashid_depend(self):
     (l_srcName, l_dstName) = self.create_indices()
 
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
