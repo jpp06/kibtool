@@ -33,9 +33,8 @@ Builds
 .. |master| image:: https://travis-ci.org/jpparis-orange/kibtool.svg?branch=master
                     :target: https://travis-ci.org/jpparis-orange/kibtool
 
-.. |masterCov| image:: https://coveralls.io/repos/github/jpparis-orange/kibtool/badge.svg
-                       :target: https://coveralls.io/github/jpparis-orange/kibtool
-
+.. |masterCov| image:: https://coveralls.io/repos/github/jpparis-orange/kibtool/badge.svg?branch=master
+                       :target: https://coveralls.io/github/jpparis-orange/kibtool?branch=master
 
 Getting started
 ---------------
