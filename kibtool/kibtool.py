@@ -49,6 +49,12 @@ class KibTool(object):
   def getDashboards(self, p_luceneReq):
     l_request = {
       "fields": ["_id"],
+      "size": self.m_args.count,
+      "sort": {
+        "_id": {
+          "order": "asc"
+        }
+      },
       "query": {
         "query_string" : {
           "query" : "title:\"" + KibTool.toLuceneSyntax(p_luceneReq) + "\" AND _type:dashboard"
@@ -66,6 +72,10 @@ class KibTool(object):
     if 0 == l_response["hits"]["total"]:
       print("*** No dashboard found for '%s' in index %s/%s" %
             (self.m_args.dash, self.m_args.esfrom, self.m_args.kibfrom), file=sys.stderr)
+      sys.exit(1)
+    elif self.m_args.count < l_response["hits"]["total"]:
+      print("*** Please use a greater --count (%d) to select all dashboards" %
+            (l_response["hits"]["total"]), file=sys.stderr)
       sys.exit(1)
     else:
       for c_hit in l_response["hits"]["hits"]:
@@ -163,6 +173,10 @@ class KibTool(object):
     l_parser.add_argument(
       "--dashid", type=str, action='append',
       help="Kibana dashboard id.",
+    )
+    l_parser.add_argument(
+      "--count", type=int, default=100,
+      help="Request size limit when querying daashboards.",
     )
     l_parser.add_argument(
       "--depend", action='store_true', default=False,
