@@ -22,6 +22,14 @@ class KObject(object):
     return hash((self.m_index, self.m_type, self.m_id))
   def __eq__(self, p_other):
     return self.m_index == p_other.m_index and self.m_type == p_other.m_type and self.m_id == p_other.m_id
+  def __lt__(self, p_other):
+    if self.m_index < p_other.m_index:
+      return True
+    if self.m_type < p_other.m_type:
+      return True
+    if self.m_id < p_other.m_id:
+      return True
+    return False
 
   def readFromEs(self):
     if self.m_json:
@@ -29,7 +37,6 @@ class KObject(object):
     try:
       self.m_json = self.m_es.get(index=self.m_index, doc_type=self.m_type, id=self.m_id)
     except exceptions.NotFoundError as e:
-      print("***", e, file=sys.stderr)
       return {}
 
   def copyFromTo(self, p_esTo, p_indexTo, p_force=False):
@@ -69,6 +76,9 @@ class Visualization(KObject):
     super().__init__(p_es, p_index, "visualization", p_id)
   def getDepend(self):
     self.readFromEs()
+    if not self.m_json:
+      print("*** Can not get '%s' object from '%s'" % (self, self.m_index), file=sys.stderr)
+      return []
     l_result = set()
     if "savedSearchId" in self.m_json["_source"]:
       l_search = Search(self.m_es, self.m_index, self.m_json["_source"]["savedSearchId"])
@@ -94,7 +104,6 @@ class Dashboard(KObject):
       elif "search" == c_panel["type"]:
         l_result.add(Search(self.m_es, self.m_index, c_panel["id"]))
       else:
-        print("*** Unknown object type '%s' in dashboard" % (c_panel["type"]),
-              file=sys.stderr)
+        print("*** Unknown object type '%s' in dashboard" % (c_panel["type"]), file=sys.stderr)
         sys.exit(1)
     return l_result

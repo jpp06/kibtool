@@ -97,7 +97,7 @@ class KibTool(object):
         l_response = self.m_esto.update(index=self.m_args.kibto, doc_type=l_type, id=c_hit["_id"],
                                         body={ "doc": c_hit["_source"], "doc_as_upsert" : True })
         if "_shards" not in l_response or l_response["_shards"]["total"] != l_response["_shards"]["successful"]:
-          print("*** Can't update default pattern index in '%s'." % (self.m_args.kibto))
+          print("*** Can't update default pattern index in '%s'." % (self.m_args.kibto), file=sys.stderr)
           sys.exit(1)
 
   # MAIN
@@ -116,19 +116,24 @@ class KibTool(object):
         l_depends.update(c_kobj.getDepend())
 
     l_dependsL = list(l_depends)
-    if self.m_args.print:
-      for c_kobj in l_dependsL + l_kobjs:
-        print(c_kobj)
+    if not self.m_args.dry:
+      if self.m_args.print:
+        for c_kobj in l_dependsL + l_kobjs:
+          print(c_kobj)
 
     if self.m_args.copy:
       if self.m_args.kibfrom == self.m_args.kibto and self.m_args.esfrom == self.m_args.esto:
-        print("*** Source and destination indices are identical: no copy done.")
+        print("*** Source and destination indices are identical: no copy done.", file=sys.stderr)
         sys.exit(1)
       else:
-        for c_obj in l_dependsL + l_kobjs:
-          if self.m_args.debug:
-            print("---", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
-          c_obj.copyFromTo(self.m_esto, self.m_args.kibto, self.m_args.force)
+        for c_obj in sorted(l_dependsL + l_kobjs):
+          if self.m_args.dry:
+            print("+++ Copying '%s/%s' from '%s/%s' to '%s/%s'" %
+                  (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.esto, self.m_args.kibto))
+          else:
+            if self.m_args.debug:
+              print("---", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
+            c_obj.copyFromTo(self.m_esto, self.m_args.kibto, self.m_args.force)
 
     # check for default index pattern
     if self.m_args.depend and self.m_args.copy:
@@ -183,16 +188,21 @@ class KibTool(object):
       help="add objects needed by selected objects (recursively).",
     )
     l_parser.add_argument(
-      "--copy", action='store_true', default=False,
-      help="copy listed objects from source index to destination index. By default, don't replace existing: use '--force'",
+      "--force", action='store_true', default=False,
+      help="force replacement of existing objects.",
     )
+    # actions
     l_parser.add_argument(
       "--print", action='store_true', default=False,
       help="print listed objects",
     )
     l_parser.add_argument(
-      "--force", action='store_true', default=False,
-      help="force replacement of existing objects.",
+      "--dry", action='store_true', default=False,
+      help="Dry run: tell what would have been written.",
+    )
+    l_parser.add_argument(
+      "--copy", action='store_true', default=False,
+      help="copy listed objects from source index to destination index. By default, don't replace existing: use '--force'",
     )
 
     l_result = l_parser.parse_args(p_args[1:])
@@ -201,3 +211,8 @@ class KibTool(object):
         return l_result
       else:
         l_parser.error("the following arguments are required: --dash or --dashid")
+    # print os the default action
+    if not l_result.copy:
+      l_result.print = True
+      if l_result.dry:
+        print("+++ Nothing will be written: source index will be read to find and print object list.")
