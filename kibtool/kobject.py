@@ -31,13 +31,19 @@ class KObject(object):
       return True
     return False
 
+  def deleteFromEs(self):
+    try:
+      self.m_json = self.m_es.delete(index=self.m_index, doc_type=self.m_type, id=self.m_id)
+    except exceptions.NotFoundError as e:
+      return
+
   def readFromEs(self):
     if self.m_json:
       return
     try:
       self.m_json = self.m_es.get(index=self.m_index, doc_type=self.m_type, id=self.m_id)
     except exceptions.NotFoundError as e:
-      return {}
+      return
 
   def copyFromTo(self, p_esTo, p_indexTo, p_force=False):
     self.readFromEs()

@@ -71,7 +71,7 @@ class KibTool(object):
     l_result = []
     if 0 == l_response["hits"]["total"]:
       print("*** No dashboard found for '%s' in index %s/%s" %
-            (self.m_args.dash, self.m_args.esfrom, self.m_args.kibfrom), file=sys.stderr)
+            (p_luceneReq, self.m_args.esfrom, self.m_args.kibfrom), file=sys.stderr)
       sys.exit(1)
     elif self.m_args.count < l_response["hits"]["total"]:
       print("*** Please use a greater --count (%d) to select all dashboards" %
@@ -136,8 +136,18 @@ class KibTool(object):
                     (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.esto, self.m_args.kibto))
           else:
             if self.m_args.debug:
-              print("---", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
+              print("--- copying", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
             c_obj.copyFromTo(self.m_esto, self.m_args.kibto, self.m_args.force)
+
+    if self.m_args.delete:
+      for c_obj in sorted(l_dependsL + l_kobjs):
+        if self.m_args.dry:
+          print("+++ Deleting '%s/%s' from '%s/%s'" %
+                (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom))
+        else:
+          if self.m_args.debug:
+            print("--- deleting", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
+          c_obj.deleteFromEs()
 
     # check for default index pattern
     if self.m_args.depend and self.m_args.copy:
@@ -197,7 +207,7 @@ class KibTool(object):
     )
     l_parser.add_argument(
       "--dry", action='store_true', default=False,
-      help="Dry run: tell what would have been written.",
+      help="run without side effects: tell what would have been written.",
     )
     # actions
     l_parser.add_argument(
@@ -208,15 +218,25 @@ class KibTool(object):
       "--copy", action='store_true', default=False,
       help="copy listed objects from source index to destination index. By default, don't replace existing: use '--force'",
     )
+    l_parser.add_argument(
+      "--delete", action='store_true', default=False,
+      help="delete listed objects from source index",
+    )
 
     l_result = l_parser.parse_args(p_args[1:])
+    # required args
     if l_result:
-      if l_result.dash or l_result.dashid:
-        return l_result
-      else:
+      if not l_result.dash and not l_result.dashid:
         l_parser.error("the following arguments are required: --dash or --dashid")
+        sys.exit(1)
     # print os the default action
-    if not l_result.copy:
+    if not l_result.copy and not l_result.delete:
       l_result.print = True
       if l_result.dry:
-        print("+++ Nothing will be written: source index will be read to find and print object list.")
+        print("+++ No object will be created or deleted: source index will be read to find and print object list.")
+        sys.exit(0)
+    # delete all should be forced
+    if l_result.delete and l_result.dash and "*" in l_result.dash and not l_result.force:
+      print("--- Trying to delete all from source index. Use --force if you are sure", file=sys.stderr)
+      sys.exit(1)
+    return l_result
