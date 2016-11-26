@@ -30,7 +30,7 @@ class TestMssingObjects(KibtoolTestCase):
         l_kibtool.execute()
         self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
-      self.assertEquals(fake_err.getvalue().strip(), "*** No dashboard found for '['oups']' in index localhost:9200/kibtool-src")
+      self.assertEquals(fake_err.getvalue().strip(), "*** No dashboard found for 'oups' in index localhost:9200/kibtool-src")
 
     l_src = self.client.search(index=l_dstName, doc_type="dashboard", body={
       "query": {
