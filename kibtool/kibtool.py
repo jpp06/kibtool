@@ -128,8 +128,12 @@ class KibTool(object):
       else:
         for c_obj in sorted(l_dependsL + l_kobjs):
           if self.m_args.dry:
-            print("+++ Copying '%s/%s' from '%s/%s' to '%s/%s'" %
-                  (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.esto, self.m_args.kibto))
+            if self.m_args.force:
+              print("+++ Copying '%s/%s' from '%s/%s' and replacing to '%s/%s'" %
+                    (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.esto, self.m_args.kibto))
+            else:
+              print("+++ Copying '%s/%s' from '%s/%s' to '%s/%s'" %
+                    (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.esto, self.m_args.kibto))
           else:
             if self.m_args.debug:
               print("---", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
@@ -191,14 +195,14 @@ class KibTool(object):
       "--force", action='store_true', default=False,
       help="force replacement of existing objects.",
     )
+    l_parser.add_argument(
+      "--dry", action='store_true', default=False,
+      help="Dry run: tell what would have been written.",
+    )
     # actions
     l_parser.add_argument(
       "--print", action='store_true', default=False,
       help="print listed objects",
-    )
-    l_parser.add_argument(
-      "--dry", action='store_true', default=False,
-      help="Dry run: tell what would have been written.",
     )
     l_parser.add_argument(
       "--copy", action='store_true', default=False,
