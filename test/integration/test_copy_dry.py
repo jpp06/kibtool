@@ -33,12 +33,7 @@ class TestCopyDry(KibtoolTestCase):
     l_src = self.client.get(index=l_srcName, doc_type="dashboard", id="dashboard-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
 
@@ -56,12 +51,7 @@ class TestCopyDry(KibtoolTestCase):
     l_src = self.client.get(index=l_srcName, doc_type="dashboard", id="dashboard-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
 
@@ -83,45 +73,25 @@ class TestCopyDry(KibtoolTestCase):
     l_src = self.client.get(index=l_srcName, doc_type="dashboard", id="dashboard-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
     l_src = self.client.get(index=l_srcName, doc_type="visualization", id="visualization-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="visualization", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="visualization", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
     l_src = self.client.get(index=l_srcName, doc_type="search", id="search-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="search", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="search", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
     l_src = self.client.get(index=l_srcName, doc_type="index-pattern", id="index-pattern-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="index-pattern", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="index-pattern", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
 
@@ -139,12 +109,7 @@ class TestCopyDry(KibtoolTestCase):
     l_src = self.client.get(index=l_srcName, doc_type="dashboard", id="dashboard-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
 
@@ -162,12 +127,7 @@ class TestCopyDry(KibtoolTestCase):
     l_src = self.client.get(index=l_srcName, doc_type="dashboard", id="dashboard-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
 
@@ -189,45 +149,25 @@ class TestCopyDry(KibtoolTestCase):
     l_src = self.client.get(index=l_srcName, doc_type="dashboard", id="dashboard-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
     l_src = self.client.get(index=l_srcName, doc_type="visualization", id="visualization-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="visualization", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="visualization", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
     l_src = self.client.get(index=l_srcName, doc_type="search", id="search-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="search", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="search", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
     l_src = self.client.get(index=l_srcName, doc_type="index-pattern", id="index-pattern-1")
     l_srcIdx = l_src.pop("_index")
     self.assertEquals(l_srcIdx, l_srcName)
-    l_dst = self.client.search(index=l_dstName, doc_type="index-pattern", body={
-      "query": {
-        "match_all": {
-        }
-      }
-    })
+    l_dst = self.client.search(index=l_dstName, doc_type="index-pattern", body={"query": {"match_all": {}}})
     self.assertEquals(l_dst["hits"]["total"], 0)
 
 # ./test_kibtool --kibfrom kibtool-src --kibto kibtool-dst --dashid dashboard-1 --depend --copy
