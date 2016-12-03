@@ -73,7 +73,7 @@ class TestDashboardCount(KibtoolTestCase):
         l_kibtool.execute()
         self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
-      self.assertEquals(fake_err.getvalue().strip(), "*** Please use a greater --count (2) to select all dashboards")
+      self.assertEquals(fake_err.getvalue().strip(), "*** Please use a greater --count (3) to select all dashboards")
 
     l_src = self.client.get(index=l_srcName, doc_type="dashboard", id="dashboard-1")
     l_srcIdx = l_src.pop("_index")

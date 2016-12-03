@@ -127,6 +127,24 @@ class KibtoolTestCase(TestCase):
     self.client.create(
       index=p_idx, doc_type="dashboard", id="dashboard-8", body=l_body,
     )
+    l_body = {
+      "timeFrom": "now-1y",
+      "title": "dashboard 2",
+      "uiStateJSON": "{}",
+      "timeRestore": True,
+      "optionsJSON": "{\"darkTheme\":false}",
+      "version": 1,
+      "timeTo": "now",
+      "description": "",
+      "hits": 0,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}]}"
+      },
+      "panelsJSON": "[{\"id\":\"no-visu\",\"type\":\"visualization\",\"panelIndex\":1,\"size_x\":3,\"size_y\":2,\"col\":1,\"row\":1}]",
+    }
+    self.client.create(
+      index=p_idx, doc_type="dashboard", id="dashboard-2", body=l_body,
+    )
   def add_kibana_visualization_docs(self, p_idx):
     l_body = {
       "title": "visualization 1",
@@ -155,6 +173,20 @@ class KibtoolTestCase(TestCase):
     }
     self.client.create(
       index=p_idx, doc_type="visualization", id="visualizàtion-8", body=l_body,
+    )
+    l_body = {
+      "title": "visualization 2",
+      "visState": "{\"title\":\"New Visualization\",\"type\":\"histogram\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"scale\":\"linear\",\"mode\":\"stacked\",\"times\":[],\"addTimeMarker\":false,\"defaultYExtents\":false,\"setYExtents\":false,\"yAxis\":{}},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}}],\"listeners\":{}}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "savedSearchId": "no-search",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[]}"
+      }
+    }
+    self.client.create(
+      index=p_idx, doc_type="visualization", id="visualization-2", body=l_body,
     )
   def add_kibana_search_docs(self, p_idx):
     l_body = {
