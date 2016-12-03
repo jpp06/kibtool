@@ -18,7 +18,7 @@ logging.getLogger("urllib3").setLevel(logging.ERROR)
 host, port = os.environ.get('TEST_ES_SERVER', 'localhost:9200').split(':')
 port = int(port) if port else 9200
 
-class TestCopy(KibtoolTestCase):
+class TestCopyVisu(KibtoolTestCase):
   def test_copy_visuid(self):
     (l_srcName, l_dstName) = self.create_indices()
 
