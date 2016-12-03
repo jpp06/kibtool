@@ -146,6 +146,13 @@ class KibTool(object):
         for c_kobj in l_dependsL + l_kobjs:
           print(c_kobj)
 
+    if self.m_args.check:
+      l_missingIds = set()
+      for c_kobj in l_dependsL + l_kobjs:
+        l_missingIds.update(c_kobj.getMissingDepend())
+      for c_missing in sorted(l_missingIds):
+        print("--- object '%s' is missing" % (c_missing))
+
     if self.m_args.copy:
       if self.m_args.kibfrom == self.m_args.kibto and self.m_args.esfrom == self.m_args.esto:
         print("*** Source and destination indices are identical: no copy done.", file=sys.stderr)
@@ -266,6 +273,10 @@ class KibTool(object):
       "--delete", action='store_true', default=False,
       help="delete listed objects from source index",
     )
+    l_parser.add_argument(
+      "--check", action='store_true', default=False,
+      help="check dependencies of listed objects in source index",
+    )
 
     l_result = l_parser.parse_args(p_args[1:])
     # required args
@@ -275,11 +286,11 @@ class KibTool(object):
          not l_result.search and not l_result.searchid:
         l_parser.error("at least one of --dash, --dashid, --visu or --visuid, --search or --searchid is required")
         sys.exit(1)
-    # print os the default action
-    if not l_result.copy and not l_result.delete:
+    # print is the default action
+    if not l_result.copy and not l_result.delete and not l_result.check:
       l_result.print = True
       if l_result.dry:
-        print("+++ No object will be created or deleted: source index will be read to find and print object list.")
+        print("+++ No object will be created, checked, or deleted: source index will be read to find and print object list.")
         sys.exit(0)
     # delete all should be forced
     if l_result.delete and l_result.dash and "*" in l_result.dash and not l_result.force:
