@@ -12,6 +12,8 @@ import logging
 logging.getLogger("elasticsearch").setLevel(logging.ERROR)
 
 from kibtool.kobject import Dashboard
+from kibtool.kobject import Visualization
+from kibtool.kobject import Search
 
 
 class KibTool(object):
@@ -47,6 +49,12 @@ class KibTool(object):
     return p_req.replace(":", " ")
 
   def getDashboards(self, p_luceneReq):
+    return self.getObjects(p_luceneReq, "dashboard", Dashboard)
+  def getVisualizations(self, p_luceneReq):
+    return self.getObjects(p_luceneReq, "visualization", Visualization)
+  def getSearchs(self, p_luceneReq):
+    return self.getObjects(p_luceneReq, "search", Search)
+  def getObjects(self, p_luceneReq, p_type, p_ctor):
     l_request = {
       "fields": ["_id"],
       "size": self.m_args.count,
@@ -57,33 +65,38 @@ class KibTool(object):
       },
       "query": {
         "query_string" : {
-          "query" : "title:\"" + KibTool.toLuceneSyntax(p_luceneReq) + "\" AND _type:dashboard"
+          "query" : "title:\"" + KibTool.toLuceneSyntax(p_luceneReq) + "\" AND _type:" + p_type
         }
       }
     }
     if self.m_args.debug:
       print("---", l_request)
     try:
-      l_response = self.m_esfrom.search(index=self.m_args.kibfrom, doc_type="dashboard", body=l_request)
+      l_response = self.m_esfrom.search(index=self.m_args.kibfrom, doc_type=p_type, body=l_request)
     except exceptions.NotFoundError:
       print("*** Can't search in unknown index", self.m_args.kibfrom, file=sys.stderr)
       sys.exit(1)
     l_result = []
     if 0 == l_response["hits"]["total"]:
-      print("*** No dashboard found for '%s' in index %s/%s" %
-            (self.m_args.dash, self.m_args.esfrom, self.m_args.kibfrom), file=sys.stderr)
+      print("*** No %s found for '%s' in index %s/%s" %
+            (p_type, p_luceneReq, self.m_args.esfrom, self.m_args.kibfrom), file=sys.stderr)
       sys.exit(1)
     elif self.m_args.count < l_response["hits"]["total"]:
-      print("*** Please use a greater --count (%d) to select all dashboards" %
-            (l_response["hits"]["total"]), file=sys.stderr)
+      print("*** Please use a greater --count (%d) to select all %ss" %
+            (l_response["hits"]["total"], p_type), file=sys.stderr)
       sys.exit(1)
     else:
       for c_hit in l_response["hits"]["hits"]:
-        l_d = Dashboard(self.m_esfrom, self.m_args.kibfrom, c_hit["_id"])
+        l_d = p_ctor(self.m_esfrom, self.m_args.kibfrom, c_hit["_id"])
         l_result.append(l_d)
     return l_result
+
   def getDashboard(self, p_id):
     return [ Dashboard(self.m_esfrom, self.m_args.kibfrom, p_id) ]
+  def getVisualization(self, p_id):
+    return [ Visualization(self.m_esfrom, self.m_args.kibfrom, p_id) ]
+  def getSearch(self, p_id):
+    return [ Search(self.m_esfrom, self.m_args.kibfrom, p_id) ]
 
   def checkDefaultIndexPattern(self, p_indexPattern):
     l_type = "config"
@@ -97,7 +110,7 @@ class KibTool(object):
         l_response = self.m_esto.update(index=self.m_args.kibto, doc_type=l_type, id=c_hit["_id"],
                                         body={ "doc": c_hit["_source"], "doc_as_upsert" : True })
         if "_shards" not in l_response or l_response["_shards"]["total"] != l_response["_shards"]["successful"]:
-          print("*** Can't update default pattern index in '%s'." % (self.m_args.kibto))
+          print("*** Can't update default pattern index in '%s'." % (self.m_args.kibto), file=sys.stderr)
           sys.exit(1)
 
   # MAIN
@@ -109,6 +122,18 @@ class KibTool(object):
     if self.m_args.dashid:
       for c_dash in self.m_args.dashid:
         l_kobjs.extend(self.getDashboard(c_dash))
+    if self.m_args.visu:
+      for c_visu in self.m_args.visu:
+        l_kobjs.extend(self.getVisualizations(c_visu))
+    if self.m_args.visuid:
+      for c_visu in self.m_args.visuid:
+        l_kobjs.extend(self.getVisualization(c_visu))
+    if self.m_args.search:
+      for c_search in self.m_args.search:
+        l_kobjs.extend(self.getSearchs(c_search))
+    if self.m_args.searchid:
+      for c_search in self.m_args.searchid:
+        l_kobjs.extend(self.getSearch(c_search))
 
     l_depends = set()
     if self.m_args.depend:
@@ -116,19 +141,45 @@ class KibTool(object):
         l_depends.update(c_kobj.getDepend())
 
     l_dependsL = list(l_depends)
-    if self.m_args.print:
+    if not self.m_args.dry:
+      if self.m_args.print:
+        for c_kobj in l_dependsL + l_kobjs:
+          print(c_kobj)
+
+    if self.m_args.check:
+      l_missingIds = set()
       for c_kobj in l_dependsL + l_kobjs:
-        print(c_kobj)
+        l_missingIds.update(c_kobj.getMissingDepend())
+      for c_missing in sorted(l_missingIds):
+        print("--- object '%s' is missing" % (c_missing))
 
     if self.m_args.copy:
       if self.m_args.kibfrom == self.m_args.kibto and self.m_args.esfrom == self.m_args.esto:
-        print("*** Source and destination indices are identical: no copy done.")
+        print("*** Source and destination indices are identical: no copy done.", file=sys.stderr)
         sys.exit(1)
       else:
-        for c_obj in l_dependsL + l_kobjs:
+        for c_obj in sorted(l_dependsL + l_kobjs):
+          if self.m_args.dry:
+            if self.m_args.force:
+              print("+++ Copying '%s/%s' from '%s/%s' and replacing to '%s/%s'" %
+                    (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.esto, self.m_args.kibto))
+            else:
+              print("+++ Copying '%s/%s' from '%s/%s' to '%s/%s'" %
+                    (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.esto, self.m_args.kibto))
+          else:
+            if self.m_args.debug:
+              print("--- copying", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
+            c_obj.copyFromTo(self.m_esto, self.m_args.kibto, self.m_args.force)
+
+    if self.m_args.delete:
+      for c_obj in sorted(l_dependsL + l_kobjs):
+        if self.m_args.dry:
+          print("+++ Deleting '%s/%s' from '%s/%s'" %
+                (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom))
+        else:
           if self.m_args.debug:
-            print("---", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
-          c_obj.copyFromTo(self.m_esto, self.m_args.kibto, self.m_args.force)
+            print("--- deleting", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
+          c_obj.deleteFromEs()
 
     # check for default index pattern
     if self.m_args.depend and self.m_args.copy:
@@ -146,6 +197,7 @@ class KibTool(object):
       "--debug", action='store_true', default=False,
       help="print debug messages",
     )
+    # es related options
     l_parser.add_argument(
       "--esfrom", type=str,
       default="localhost:9200",
@@ -167,6 +219,24 @@ class KibTool(object):
       help="Kibana destination index name.",
     )
     l_parser.add_argument(
+      "--count", type=int, default=100,
+      help="Request size limit when querying daashboards.",
+    )
+    # modifiers
+    l_parser.add_argument(
+      "--depend", action='store_true', default=False,
+      help="add objects needed by selected objects (recursively).",
+    )
+    l_parser.add_argument(
+      "--force", action='store_true', default=False,
+      help="force replacement of existing objects.",
+    )
+    l_parser.add_argument(
+      "--dry", action='store_true', default=False,
+      help="run without side effects: tell what would have been written.",
+    )
+    # object selectors
+    l_parser.add_argument(
       "--dash", type=str, action='append',
       help="Kibana dashboard name in Lucene query syntax.",
     )
@@ -175,29 +245,55 @@ class KibTool(object):
       help="Kibana dashboard id.",
     )
     l_parser.add_argument(
-      "--count", type=int, default=100,
-      help="Request size limit when querying daashboards.",
+      "--visu", type=str, action='append',
+      help="Kibana visualization name in Lucene query syntax.",
     )
     l_parser.add_argument(
-      "--depend", action='store_true', default=False,
-      help="add objects needed by selected objects (recursively).",
+      "--visuid", type=str, action='append',
+      help="Kibana visualization id.",
+    )
+    l_parser.add_argument(
+      "--search", type=str, action='append',
+      help="Kibana search name in Lucene query syntax.",
+    )
+    l_parser.add_argument(
+      "--searchid", type=str, action='append',
+      help="Kibana search id.",
+    )
+    # actions
+    l_parser.add_argument(
+      "--print", action='store_true', default=False,
+      help="print listed objects",
     )
     l_parser.add_argument(
       "--copy", action='store_true', default=False,
       help="copy listed objects from source index to destination index. By default, don't replace existing: use '--force'",
     )
     l_parser.add_argument(
-      "--print", action='store_true', default=False,
-      help="print listed objects",
+      "--delete", action='store_true', default=False,
+      help="delete listed objects from source index",
     )
     l_parser.add_argument(
-      "--force", action='store_true', default=False,
-      help="force replacement of existing objects.",
+      "--check", action='store_true', default=False,
+      help="check dependencies of listed objects in source index",
     )
 
     l_result = l_parser.parse_args(p_args[1:])
+    # required args
     if l_result:
-      if l_result.dash or l_result.dashid:
-        return l_result
-      else:
-        l_parser.error("the following arguments are required: --dash or --dashid")
+      if not l_result.dash and not l_result.dashid and \
+         not l_result.visu and not l_result.visuid and \
+         not l_result.search and not l_result.searchid:
+        l_parser.error("at least one of --dash, --dashid, --visu or --visuid, --search or --searchid is required")
+        sys.exit(1)
+    # print is the default action
+    if not l_result.copy and not l_result.delete and not l_result.check:
+      l_result.print = True
+      if l_result.dry:
+        print("+++ No object will be created, checked, or deleted: source index will be read to find and print object list.")
+        sys.exit(0)
+    # delete all should be forced
+    if l_result.delete and l_result.dash and "*" in l_result.dash and not l_result.force:
+      print("--- Trying to delete all from source index. Use --force if you are sure", file=sys.stderr)
+      sys.exit(1)
+    return l_result

@@ -22,6 +22,20 @@ class KObject(object):
     return hash((self.m_index, self.m_type, self.m_id))
   def __eq__(self, p_other):
     return self.m_index == p_other.m_index and self.m_type == p_other.m_type and self.m_id == p_other.m_id
+  def __lt__(self, p_other):
+    if self.m_index < p_other.m_index:
+      return True
+    if self.m_type < p_other.m_type:
+      return True
+    if self.m_id < p_other.m_id:
+      return True
+    return False
+
+  def deleteFromEs(self):
+    try:
+      self.m_json = self.m_es.delete(index=self.m_index, doc_type=self.m_type, id=self.m_id)
+    except exceptions.NotFoundError as e:
+      return
 
   def readFromEs(self):
     if self.m_json:
@@ -29,8 +43,7 @@ class KObject(object):
     try:
       self.m_json = self.m_es.get(index=self.m_index, doc_type=self.m_type, id=self.m_id)
     except exceptions.NotFoundError as e:
-      print("***", e, file=sys.stderr)
-      return {}
+      return
 
   def copyFromTo(self, p_esTo, p_indexTo, p_force=False):
     self.readFromEs()
@@ -49,6 +62,15 @@ class KObject(object):
       print("*** Can't write to unknown index", p_indexTo, file=sys.stderr)
       sys.exit(1)
 
+  def getMissingDepend(self):
+    l_deps = self.getDepend(True)
+    l_missings = []
+    for c_dep in l_deps:
+      c_dep.readFromEs()
+      if not c_dep.m_json:
+        l_missings.append(c_dep)
+    return l_missings
+
 class Config(KObject):
   def __init__(self, p_es, p_index, p_id):
     super().__init__(p_es, p_index, "config", p_id)
@@ -58,8 +80,12 @@ class IndexPattern(KObject):
 class Search(KObject):
   def __init__(self, p_es, p_index, p_id):
     super().__init__(p_es, p_index, "search", p_id)
-  def getDepend(self):
+  def getDepend(self, p_silent=False):
     self.readFromEs()
+    if not self.m_json:
+      if not p_silent:
+        print("*** Can not get '%s' object from '%s'" % (self, self.m_index), file=sys.stderr)
+      return []
     l_searchSource = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
     if "index" in l_searchSource:
       return [ IndexPattern(self.m_es, self.m_index, l_searchSource["index"]) ]
@@ -67,13 +93,17 @@ class Search(KObject):
 class Visualization(KObject):
   def __init__(self, p_es, p_index, p_id):
     super().__init__(p_es, p_index, "visualization", p_id)
-  def getDepend(self):
+  def getDepend(self, p_silent=False):
     self.readFromEs()
+    if not self.m_json:
+      if not p_silent:
+        print("*** Can not get '%s' object from '%s'" % (self, self.m_index), file=sys.stderr)
+      return []
     l_result = set()
     if "savedSearchId" in self.m_json["_source"]:
       l_search = Search(self.m_es, self.m_index, self.m_json["_source"]["savedSearchId"])
       l_result.add(l_search)
-      l_result.update(l_search.getDepend())
+      l_result.update(l_search.getDepend(p_silent))
     l_searchSource = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
     if "index" in l_searchSource:
       l_result.add(IndexPattern(self.m_es, self.m_index, l_searchSource["index"]))
@@ -82,19 +112,22 @@ class Visualization(KObject):
 class Dashboard(KObject):
   def __init__(self, p_es, p_index, p_id):
     super().__init__(p_es, p_index, "dashboard", p_id)
-  def getDepend(self):
+  def getDepend(self, p_silent=False):
     self.readFromEs()
+    if not self.m_json:
+      if not p_silent:
+        print("*** Can not get '%s' object from '%s'" % (self, self.m_index), file=sys.stderr)
+      return []
     l_panels = json.loads(self.m_json["_source"]["panelsJSON"])
     l_result = set()
     for c_panel in l_panels:
       if "visualization" == c_panel["type"]:
         l_viz = Visualization(self.m_es, self.m_index, c_panel["id"])
         l_result.add(l_viz)
-        l_result.update(l_viz.getDepend())
+        l_result.update(l_viz.getDepend(p_silent))
       elif "search" == c_panel["type"]:
         l_result.add(Search(self.m_es, self.m_index, c_panel["id"]))
       else:
-        print("*** Unknown object type '%s' in dashboard" % (c_panel["type"]),
-              file=sys.stderr)
+        print("*** Unknown object type '%s' in dashboard" % (c_panel["type"]), file=sys.stderr)
         sys.exit(1)
     return l_result

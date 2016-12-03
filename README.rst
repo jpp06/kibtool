@@ -33,9 +33,8 @@ Builds
 .. |master| image:: https://travis-ci.org/jpparis-orange/kibtool.svg?branch=master
                     :target: https://travis-ci.org/jpparis-orange/kibtool
 
-.. |masterCov| image:: https://coveralls.io/repos/github/jpparis-orange/kibtool/badge.svg
-                       :target: https://coveralls.io/github/jpparis-orange/kibtool
-
+.. |masterCov| image:: https://coveralls.io/repos/github/jpparis-orange/kibtool/badge.svg?branch=master
+                       :target: https://coveralls.io/github/jpparis-orange/kibtool?branch=master
 
 Getting started
 ---------------
@@ -43,7 +42,7 @@ Getting started
 * Fork the repo and run from source.
 * If not installed already, you will need `Python Elasticsearch Client`_. I'm
   currently using 2.4.0.
-* In the root directory of the project, run ``kibtool.py --help`` to show usage
+* In the root directory of the project, ``run_kibtool.py --help`` to show usage
   information.
 
 .. _Python Elasticsearch Client: https://github.com/elastic/elasticsearch-py
@@ -51,17 +50,17 @@ Getting started
 Examples
 --------
 
-* ``./kibtool.py --kibfrom .kibana_src --dash '*' --print`` list IDs of all documents typed ``dashboard``
+* ``./run_kibtool.py --kibfrom .kibana_src --dash '*' --print`` list IDs of all documents of type ``dashboard``
   found in ``.kibana_src``. ``--dash`` argument is a Lucene query applied on the title of dashboards.
-  Kibana index is found on ``localhost:92000`` by default (see ``--esfrom``)
-* ``./kibtool.py --kibfrom .kibana_src --dash '*' --print --depend`` list IDs of all documents typed
+  Kibana index is found on ``localhost:9200`` by default (see ``--esfrom``)
+* ``./run_kibtool.py --kibfrom .kibana_src --dash '*' --print --depend`` list IDs of all documents typed
   ``dashboard`` found in ``.kibana_src``, and all dependencies (visualization, search, config,
   index-pattern).  ``--dash`` argument is a Lucene query applied on the title of dashboards.
-* ``./kibtool.py --kibfrom .kibana_src --dash 'my_dashboard' --kibto .kibana_dest --depend --copy --force``
+* ``./run_kibtool.py --kibfrom .kibana_src --dash 'my_dashboard' --kibto .kibana_dest --depend --copy --force``
   copy dashboard ``my_dashboard`` and all its dependencies (visualization, search, config, index-pattern)
   from ``.kibana_src`` to ``.kibana_dst``. Existing objects in ``.kibana_dst`` will be overwritten (--force).
   ``--dash`` argument is a Lucene query applied on the title of dashboards.
-* ``./kibtool.py --kibfrom .kibana_src --dashid 'my-:-dashboard' --kibto .kibana_dest --copy``
+* ``./run_kibtool.py --kibfrom .kibana_src --dashid 'my-:-dashboard' --kibto .kibana_dest --copy``
   copy dashboard identified by ``my-:-dashboard`` to ``.kibana_dst``.
 
 Thanks
