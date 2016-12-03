@@ -12,6 +12,8 @@ import logging
 logging.getLogger("elasticsearch").setLevel(logging.ERROR)
 
 from kibtool.kobject import Dashboard
+from kibtool.kobject import Visualization
+from kibtool.kobject import Search
 
 
 class KibTool(object):
@@ -47,6 +49,12 @@ class KibTool(object):
     return p_req.replace(":", " ")
 
   def getDashboards(self, p_luceneReq):
+    return self.getObjects(p_luceneReq, "dashboard", Dashboard)
+  def getVisualizations(self, p_luceneReq):
+    return self.getObjects(p_luceneReq, "visualization", Visualization)
+  def getSearchs(self, p_luceneReq):
+    return self.getObjects(p_luceneReq, "search", Search)
+  def getObjects(self, p_luceneReq, p_type, p_ctor):
     l_request = {
       "fields": ["_id"],
       "size": self.m_args.count,
@@ -57,33 +65,38 @@ class KibTool(object):
       },
       "query": {
         "query_string" : {
-          "query" : "title:\"" + KibTool.toLuceneSyntax(p_luceneReq) + "\" AND _type:dashboard"
+          "query" : "title:\"" + KibTool.toLuceneSyntax(p_luceneReq) + "\" AND _type:" + p_type
         }
       }
     }
     if self.m_args.debug:
       print("---", l_request)
     try:
-      l_response = self.m_esfrom.search(index=self.m_args.kibfrom, doc_type="dashboard", body=l_request)
+      l_response = self.m_esfrom.search(index=self.m_args.kibfrom, doc_type=p_type, body=l_request)
     except exceptions.NotFoundError:
       print("*** Can't search in unknown index", self.m_args.kibfrom, file=sys.stderr)
       sys.exit(1)
     l_result = []
     if 0 == l_response["hits"]["total"]:
-      print("*** No dashboard found for '%s' in index %s/%s" %
-            (p_luceneReq, self.m_args.esfrom, self.m_args.kibfrom), file=sys.stderr)
+      print("*** No %s found for '%s' in index %s/%s" %
+            (p_type, p_luceneReq, self.m_args.esfrom, self.m_args.kibfrom), file=sys.stderr)
       sys.exit(1)
     elif self.m_args.count < l_response["hits"]["total"]:
-      print("*** Please use a greater --count (%d) to select all dashboards" %
-            (l_response["hits"]["total"]), file=sys.stderr)
+      print("*** Please use a greater --count (%d) to select all %ss" %
+            (l_response["hits"]["total"], p_type), file=sys.stderr)
       sys.exit(1)
     else:
       for c_hit in l_response["hits"]["hits"]:
-        l_d = Dashboard(self.m_esfrom, self.m_args.kibfrom, c_hit["_id"])
+        l_d = p_ctor(self.m_esfrom, self.m_args.kibfrom, c_hit["_id"])
         l_result.append(l_d)
     return l_result
+
   def getDashboard(self, p_id):
     return [ Dashboard(self.m_esfrom, self.m_args.kibfrom, p_id) ]
+  def getVisualization(self, p_id):
+    return [ Visualization(self.m_esfrom, self.m_args.kibfrom, p_id) ]
+  def getSearch(self, p_id):
+    return [ Search(self.m_esfrom, self.m_args.kibfrom, p_id) ]
 
   def checkDefaultIndexPattern(self, p_indexPattern):
     l_type = "config"
@@ -109,6 +122,18 @@ class KibTool(object):
     if self.m_args.dashid:
       for c_dash in self.m_args.dashid:
         l_kobjs.extend(self.getDashboard(c_dash))
+    if self.m_args.visu:
+      for c_visu in self.m_args.visu:
+        l_kobjs.extend(self.getVisualizations(c_visu))
+    if self.m_args.visuid:
+      for c_visu in self.m_args.visuid:
+        l_kobjs.extend(self.getVisualization(c_visu))
+    if self.m_args.search:
+      for c_search in self.m_args.search:
+        l_kobjs.extend(self.getSearchs(c_search))
+    if self.m_args.searchid:
+      for c_search in self.m_args.searchid:
+        l_kobjs.extend(self.getSearch(c_search))
 
     l_depends = set()
     if self.m_args.depend:
@@ -165,6 +190,7 @@ class KibTool(object):
       "--debug", action='store_true', default=False,
       help="print debug messages",
     )
+    # es related options
     l_parser.add_argument(
       "--esfrom", type=str,
       default="localhost:9200",
@@ -186,17 +212,10 @@ class KibTool(object):
       help="Kibana destination index name.",
     )
     l_parser.add_argument(
-      "--dash", type=str, action='append',
-      help="Kibana dashboard name in Lucene query syntax.",
-    )
-    l_parser.add_argument(
-      "--dashid", type=str, action='append',
-      help="Kibana dashboard id.",
-    )
-    l_parser.add_argument(
       "--count", type=int, default=100,
       help="Request size limit when querying daashboards.",
     )
+    # modifiers
     l_parser.add_argument(
       "--depend", action='store_true', default=False,
       help="add objects needed by selected objects (recursively).",
@@ -208,6 +227,31 @@ class KibTool(object):
     l_parser.add_argument(
       "--dry", action='store_true', default=False,
       help="run without side effects: tell what would have been written.",
+    )
+    # object selectors
+    l_parser.add_argument(
+      "--dash", type=str, action='append',
+      help="Kibana dashboard name in Lucene query syntax.",
+    )
+    l_parser.add_argument(
+      "--dashid", type=str, action='append',
+      help="Kibana dashboard id.",
+    )
+    l_parser.add_argument(
+      "--visu", type=str, action='append',
+      help="Kibana visualization name in Lucene query syntax.",
+    )
+    l_parser.add_argument(
+      "--visuid", type=str, action='append',
+      help="Kibana visualization id.",
+    )
+    l_parser.add_argument(
+      "--search", type=str, action='append',
+      help="Kibana search name in Lucene query syntax.",
+    )
+    l_parser.add_argument(
+      "--searchid", type=str, action='append',
+      help="Kibana search id.",
     )
     # actions
     l_parser.add_argument(
@@ -226,8 +270,10 @@ class KibTool(object):
     l_result = l_parser.parse_args(p_args[1:])
     # required args
     if l_result:
-      if not l_result.dash and not l_result.dashid:
-        l_parser.error("the following arguments are required: --dash or --dashid")
+      if not l_result.dash and not l_result.dashid and \
+         not l_result.visu and not l_result.visuid and \
+         not l_result.search and not l_result.searchid:
+        l_parser.error("at least one of --dash, --dashid, --visu or --visuid, --search or --searchid is required")
         sys.exit(1)
     # print os the default action
     if not l_result.copy and not l_result.delete:
