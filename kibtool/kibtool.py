@@ -113,6 +113,24 @@ class KibTool(object):
           print("*** Can't update default pattern index in '%s'." % (self.m_args.kibto), file=sys.stderr)
           sys.exit(1)
 
+  def findOrphans(self):
+    l_result = set()
+    l_dashboards = self.getDashboards("*")
+    l_depends = set()
+    for c_dashboard in l_dashboards:
+      l_depends.update(c_dashboard.getDepend(True))
+    l_visualizations = self.getVisualizations("*")
+    for c_visalization in l_visualizations:
+      if not c_visalization in l_depends:
+        l_result.add(c_visalization)
+        print(c_visalization.m_id)
+    l_searches = self.getSearchs("*")
+    for c_search in l_searches:
+      if not c_search in l_depends:
+        l_result.add(c_search)
+        print(c_search.m_id)
+    return l_result
+
   # MAIN
   def execute(self):
     l_kobjs = []
@@ -145,6 +163,9 @@ class KibTool(object):
       if self.m_args.print:
         for c_kobj in l_dependsL + l_kobjs:
           print(c_kobj)
+
+    if self.m_args.orphan:
+      l_kobjs.extend(self.findOrphans())
 
     if self.m_args.check:
       l_missingIds = set()
@@ -215,7 +236,6 @@ class KibTool(object):
     )
     l_parser.add_argument(
       "--kibto", type=str,
-      default=".kibana",
       help="Kibana destination index name.",
     )
     l_parser.add_argument(
@@ -277,23 +297,46 @@ class KibTool(object):
       "--check", action='store_true', default=False,
       help="check dependencies of listed objects in source index",
     )
+    l_parser.add_argument(
+      "--orphan", action='store_true', default=False,
+      help="find unsused objects in source index",
+    )
 
     l_result = l_parser.parse_args(p_args[1:])
-    # required args
     if l_result:
+      # incompatible args
+      if l_result.orphan and l_result.copy:
+        l_parser.error("--orphan and --copy are incompatible")
+        sys.exit(1)
+      if l_result.orphan and l_result.check:
+        l_parser.error("--orphan and --check are incompatible")
+        sys.exit(1)
+      if l_result.orphan and l_result.kibto:
+        l_parser.error("--orphan and --kibto are incompatible")
+        sys.exit(1)
+
+      # required args
       if not l_result.dash and not l_result.dashid and \
          not l_result.visu and not l_result.visuid and \
-         not l_result.search and not l_result.searchid:
-        l_parser.error("at least one of --dash, --dashid, --visu or --visuid, --search or --searchid is required")
+         not l_result.search and not l_result.searchid and \
+         not l_result.orphan:
+        l_parser.error("without --orphan, at least one of --dash, --dashid, --visu, --visuid, --search, --searchid is required")
         sys.exit(1)
-    # print is the default action
-    if not l_result.copy and not l_result.delete and not l_result.check:
-      l_result.print = True
-      if l_result.dry:
-        print("+++ No object will be created, checked, or deleted: source index will be read to find and print object list.")
-        sys.exit(0)
-    # delete all should be forced
-    if l_result.delete and l_result.dash and "*" in l_result.dash and not l_result.force:
-      print("--- Trying to delete all from source index. Use --force if you are sure", file=sys.stderr)
-      sys.exit(1)
+      # --orphan exclude selector
+      if l_result.orphan and \
+         ( l_result.dash or l_result.dashid or \
+           l_result.visu or l_result.visuid or \
+           l_result.search or l_result.searchid ):
+        l_parser.error("with --orphan, no --dash, --dashid, --visu, --visuid, --search, --searchid expected")
+        sys.exit(1)
+      # print is the default action
+      if not l_result.copy and not l_result.delete and not l_result.check:
+        l_result.print = True
+        if l_result.dry:
+          print("+++ No object will be created, checked, or deleted: source index will be read to find and print object list.")
+          sys.exit(0)
+      # delete all should be forced
+      if l_result.delete and l_result.dash and "*" in l_result.dash and not l_result.force:
+        print("--- Trying to delete all from source index. Use --force if you are sure", file=sys.stderr)
+        sys.exit(1)
     return l_result
