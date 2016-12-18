@@ -52,7 +52,7 @@ class KibTool(object):
     return self.getObjects(p_luceneReq, "dashboard", Dashboard)
   def getVisualizations(self, p_luceneReq):
     return self.getObjects(p_luceneReq, "visualization", Visualization)
-  def getSearchs(self, p_luceneReq):
+  def getSearches(self, p_luceneReq):
     return self.getObjects(p_luceneReq, "search", Search)
   def getObjects(self, p_luceneReq, p_type, p_ctor):
     l_request = {
@@ -124,7 +124,7 @@ class KibTool(object):
       if not c_visalization in l_depends:
         l_result.add(c_visalization)
         print(c_visalization.m_id)
-    l_searches = self.getSearchs("*")
+    l_searches = self.getSearches("*")
     for c_search in l_searches:
       if not c_search in l_depends:
         l_result.add(c_search)
@@ -148,7 +148,7 @@ class KibTool(object):
         l_kobjs.extend(self.getVisualization(c_visu))
     if self.m_args.search:
       for c_search in self.m_args.search:
-        l_kobjs.extend(self.getSearchs(c_search))
+        l_kobjs.extend(self.getSearches(c_search))
     if self.m_args.searchid:
       for c_search in self.m_args.searchid:
         l_kobjs.extend(self.getSearch(c_search))

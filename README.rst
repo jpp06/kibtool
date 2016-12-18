@@ -64,6 +64,8 @@ Examples
   ``--dash`` argument is a Lucene query applied on the title of dashboards.
 * ``./run_kibtool.py --kibfrom .kibana_src --dashid 'my-:-dashboard' --kibto .kibana_dest --copy``
   copy dashboard identified by ``my-:-dashboard`` to ``.kibana_dst``.
+* ``./run_kibtool.py --kibfrom .kibana_src --orphan --delete --dry``
+  list unused visualisations and searches and will delete them when you remove ``--dry``
 
 Thanks
 ------
