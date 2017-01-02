@@ -240,7 +240,7 @@ class KibTool(object):
     )
     l_parser.add_argument(
       "--count", type=int, default=100,
-      help="Request size limit when querying daashboards.",
+      help="Request size limit when querying dashboards.",
     )
     # modifiers
     l_parser.add_argument(
