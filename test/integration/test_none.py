@@ -32,7 +32,7 @@ class TestNone(KibtoolTestCase):
       self.assertEquals(fake_out.getvalue().strip(), "")
       l_err = fake_err.getvalue().strip()
       self.assertEquals(l_err[:7], "usage: ")
-      self.assertRegex(l_err, "--dash, --dashid, .* required$")
+      self.assertRegex(l_err, "--dash, --dashid, .* required")
 
     self.assertEquals(
       [],
