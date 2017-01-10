@@ -3,6 +3,7 @@
 
 import sys
 import argparse
+import json
 
 from elasticsearch import Elasticsearch
 from elasticsearch import exceptions
@@ -192,6 +193,19 @@ class KibTool(object):
               print("--- copying", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
             c_obj.copyFromTo(self.m_esto, self.m_args.kibto, self.m_args.force)
 
+    if self.m_args.fileto:
+      if self.m_args.dry:
+        for c_obj in sorted(l_dependsL + l_kobjs):
+          print("+++ Copying '%s/%s' from '%s/%s' to file '%s'" %
+                (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.fileto))
+      else:
+        with open(self.m_args.fileto, "w") as w_out:
+          for c_obj in sorted(l_dependsL + l_kobjs):
+            if self.m_args.debug:
+              print("--- copying", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
+            for c_item in c_obj.toBulk():
+              print(json.dumps(c_item), file=w_out)
+
     if self.m_args.delete:
       for c_obj in sorted(l_dependsL + l_kobjs):
         if self.m_args.dry:
@@ -230,6 +244,10 @@ class KibTool(object):
       help="Kibana source index name.",
     )
     l_parser.add_argument(
+      "--filefrom", type=str,
+      help="Name of the file where Kibana objects are read.",
+    )
+    l_parser.add_argument(
       "--esto", type=str,
       default="localhost:9200",
       help="ElasticSearch destination endpoint as host:port.",
@@ -237,6 +255,10 @@ class KibTool(object):
     l_parser.add_argument(
       "--kibto", type=str,
       help="Kibana destination index name.",
+    )
+    l_parser.add_argument(
+      "--fileto", type=str,
+      help="Name of the file where Kibana objects are written.",
     )
     l_parser.add_argument(
       "--count", type=int, default=100,
@@ -314,6 +336,14 @@ class KibTool(object):
       if l_result.orphan and l_result.kibto:
         l_parser.error("--orphan and --kibto are incompatible")
         sys.exit(1)
+      # copy and fileto are incompatible
+      l_seenArgs = set(p_args[1:]) # distinguish default values and user specified values
+      if l_result.fileto and ("--esto" in l_seenArgs or "--kibto" in l_seenArgs):
+        l_parser.error("arguments --fileto and --esto/--kibto are incompatible")
+        sys.exit(1)
+      if l_result.filefrom and ("--esfrom" in l_seenArgs or "--kibfrom" in l_seenArgs):
+        l_parser.error("arguments --filefrom and --esfrom/--kibfrom are incompatible")
+        sys.exit(1)
 
       # required args
       if not l_result.dash and not l_result.dashid and \
@@ -330,7 +360,7 @@ class KibTool(object):
         l_parser.error("with --orphan, no --dash, --dashid, --visu, --visuid, --search, --searchid expected")
         sys.exit(1)
       # print is the default action
-      if not l_result.copy and not l_result.delete and not l_result.check:
+      if not l_result.copy and not l_result.delete and not l_result.check and not l_result.fileto:
         l_result.print = True
         if l_result.dry:
           print("+++ No object will be created, checked, or deleted: source index will be read to find and print object list.")
