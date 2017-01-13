@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 import argparse
+from urllib3 import make_headers
 
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, connection
 from elasticsearch import exceptions
 # suppress console err message from http connections
 # http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
@@ -33,8 +35,23 @@ class KibTool(object):
     except ValueError as e:
       print("*** bad host:port for Elasticsearch", self.m_args.esfrom, file=sys.stderr)
       sys.exit(1)
-    self.m_esfrom = Elasticsearch(hosts=[{ "host": self.m_args.hostfrom, "port": self.m_args.portfrom}],
-                                  max_retries=2, timeout=200)
+    if self.m_args.proxy:
+      os.environ['HTTP_PROXY'] = self.m_args.proxy
+      self.m_esfrom = Elasticsearch(hosts=[{ "host": self.m_args.hostfrom,
+                                             "port": int(self.m_args.portfrom),
+                                             "url_prefix": self.m_args.prefixfrom
+                                           }],
+                                    max_retries=2, timeout=200,
+                                    connection_class=connection.RequestsHttpConnection)
+      if self.m_args.cred:
+        l_header = make_headers(proxy_basic_auth=self.m_args.creds)
+        l_cnx = self.m_esfrom.transport.get_connection()
+        l_cnx.session.headers['proxy-authorization'] = l_header['proxy-authorization']
+        print(self.m_esfrom.transport.get_connection().session.headers)
+        print()
+    else:
+      self.m_esfrom = Elasticsearch(hosts=[{ "host": self.m_args.hostfrom, "port": self.m_args.portfrom}],
+                                    max_retries=2, timeout=200)
     try:
       if self.m_args.esto.startswith("http://"):
         self.m_args.esto = self.m_args.esto[7:]
@@ -225,6 +242,10 @@ class KibTool(object):
       help="ElasticSearch source endpoint as host:port.",
     )
     l_parser.add_argument(
+      "--prefixfrom", type=str,
+      help="ElasticSearch source prefix.",
+    )
+    l_parser.add_argument(
       "--kibfrom", type=str,
       default=".kibana",
       help="Kibana source index name.",
@@ -241,6 +262,15 @@ class KibTool(object):
     l_parser.add_argument(
       "--count", type=int, default=100,
       help="Request size limit when querying daashboards.",
+    )
+    # proxy
+    l_parser.add_argument(
+      "--proxy", type=str,
+      help="Proxy to reach ElasticSearch cluster.",
+    )
+    l_parser.add_argument(
+      "--cred", type=str,
+      help="Proxy credentials to reach ElasticSearch cluster.",
     )
     # modifiers
     l_parser.add_argument(
