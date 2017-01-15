@@ -34,11 +34,12 @@ class TestKObject(TestCase):
     l_obj = kibtool.KObject(l_es, "an_index", "a_type", "an_id")
     l_obj.readFromEs()
   @raises(exceptions.ConnectionError)
-  def testCopyFromTo(self):
+  def testCopyToEs(self):
     l_es = Elasticsearch(hosts=[{ "host": "nowwhere", "port": 1234}])
     l_obj = kibtool.KObject(l_es, "an_index", "a_type", "an_id")
     l_obj.m_json = {"_source":{}} # dont readFromEs
-    l_obj.copyFromTo(l_es, "dst_index")
+    l_obj.readFromEs()
+    l_obj.copyToEs(l_es, "dst_index")
 
 class TestConfig(TestCase):
   def testCtor(self):
