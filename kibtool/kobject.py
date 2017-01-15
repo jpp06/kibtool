@@ -16,6 +16,20 @@ class KObject(object):
     self.m_idUtf8 = str(p_id.encode("utf-8"))[1:].strip("'")
     self.m_json = None
 
+  def build(p_es, p_index, p_type, p_id):
+    if p_type == "dashboard":
+      return Dashboard(p_es, p_index, p_id)
+    elif p_type == "visualization":
+      return Visualization(p_es, p_index, p_id)
+    elif p_type == "search":
+      return Search(p_es, p_index, p_id)
+    elif p_type == "index-pattern":
+      return IndexPattern(p_es, p_index, p_id)
+    elif p_type == "config":
+      return Config(p_es, p_index, p_id)
+    else:
+      print("*** Unknown Kibana object type '%s'" % (p_type), file=sys.stderr)
+      sys.exit(4)
   def __str__(self):
     return self.m_index + "/" + self.m_type + "/" + self.m_idUtf8
   def __hash__(self):
@@ -37,6 +51,9 @@ class KObject(object):
     except exceptions.NotFoundError as e:
       return
 
+  def setJson(self, p_json):
+    self.m_json = p_json
+
   def readFromEs(self):
     if self.m_json:
       return
@@ -55,8 +72,7 @@ class KObject(object):
       self.m_json["_source"]
     ]
 
-  def copyFromTo(self, p_esTo, p_indexTo, p_force=False):
-    self.readFromEs()
+  def copyToEs(self, p_esTo, p_indexTo, p_force=False):
     if not self.m_json:
       print("*** Can not get '%s' object from '%s'" % (self, self.m_index), file=sys.stderr)
       return

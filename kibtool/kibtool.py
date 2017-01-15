@@ -12,6 +12,7 @@ from elasticsearch import exceptions
 import logging
 logging.getLogger("elasticsearch").setLevel(logging.ERROR)
 
+from kibtool.kobject import KObject
 from kibtool.kobject import Dashboard
 from kibtool.kobject import Visualization
 from kibtool.kobject import Search
@@ -191,7 +192,23 @@ class KibTool(object):
           else:
             if self.m_args.debug:
               print("--- copying", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
-            c_obj.copyFromTo(self.m_esto, self.m_args.kibto, self.m_args.force)
+            c_obj.readFromEs()
+            c_obj.copyToEs(self.m_esto, self.m_args.kibto, self.m_args.force)
+
+    if self.m_args.filefrom:
+      with open(self.m_args.filefrom, "r") as w_in:
+        l_header = w_in.readline()
+        while l_header:
+          l_headerDict = json.loads(l_header)["index"]
+          l_data = w_in.readline()
+          if self.m_args.dry:
+            print("+++ Copying '%s/%s' from file '%s' to '%s/%s'" %
+                  (l_headerDict["_type"], l_headerDict["_id"], self.m_args.filefrom, self.m_args.esto, self.m_args.kibto))
+          else:
+            l_obj = KObject(None, None, l_headerDict["_type"], l_headerDict["_id"])
+            l_obj.setJson( { "_source": json.loads(l_data) } )
+            l_obj.copyToEs(self.m_esto, self.m_args.kibto, self.m_args.force)
+          l_header = w_in.readline()
 
     if self.m_args.fileto:
       if self.m_args.dry:
@@ -336,21 +353,29 @@ class KibTool(object):
       if l_result.orphan and l_result.kibto:
         l_parser.error("--orphan and --kibto are incompatible")
         sys.exit(1)
-      # copy and fileto are incompatible
+      if (l_result.fileto or l_result.filefrom) and l_result.delete:
+        l_parser.error("--fileto/--filefrom and --delete are incompatible")
+        sys.exit(1)
+      if (l_result.fileto or l_result.filefrom) and l_result.copy:
+        l_parser.error("--fileto/--filefrom and --copy are incompatible")
+        sys.exit(1)
+      if l_result.fileto and l_result.filefrom:
+        l_parser.error("--fileto and --filefrom are incompatible")
+        sys.exit(1)
       l_seenArgs = set(p_args[1:]) # distinguish default values and user specified values
       if l_result.fileto and ("--esto" in l_seenArgs or "--kibto" in l_seenArgs):
-        l_parser.error("arguments --fileto and --esto/--kibto are incompatible")
+        l_parser.error("--fileto and --esto/--kibto are incompatible")
         sys.exit(1)
       if l_result.filefrom and ("--esfrom" in l_seenArgs or "--kibfrom" in l_seenArgs):
-        l_parser.error("arguments --filefrom and --esfrom/--kibfrom are incompatible")
+        l_parser.error("--filefrom and --esfrom/--kibfrom are incompatible")
         sys.exit(1)
 
       # required args
       if not l_result.dash and not l_result.dashid and \
          not l_result.visu and not l_result.visuid and \
          not l_result.search and not l_result.searchid and \
-         not l_result.orphan:
-        l_parser.error("without --orphan, at least one of --dash, --dashid, --visu, --visuid, --search, --searchid is required")
+         not l_result.orphan and not l_result.filefrom:
+        l_parser.error("without --orphan/--filefrom, at least one of --dash, --dashid, --visu, --visuid, --search, --searchid is required")
         sys.exit(1)
       # --orphan exclude selector
       if l_result.orphan and \
