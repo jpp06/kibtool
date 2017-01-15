@@ -62,6 +62,8 @@ Examples
   copy dashboard ``my_dashboard`` and all its dependencies (visualization, search, config, index-pattern)
   from ``.kibana_src`` to ``.kibana_dst``. Existing objects in ``.kibana_dst`` will be overwritten (--force).
   ``--dash`` argument is a Lucene query applied on the title of dashboards.
+* ``./run_kibtool.py --filefrom save.json --kibto .kibana_dest`` copy objects found in file ``save.json``
+ to ``.kibana_dst``. Existing objects in ``.kibana_dst`` will not be overwritten.
 * ``./run_kibtool.py --kibfrom .kibana_src --dash '*' --fileto save.json`` copy dashboard ``my_dashboard``
   and all its dependencies (visualization, search, config, index-pattern) from ``.kibana_src`` to
   file ``save.json``.
