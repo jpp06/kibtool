@@ -277,6 +277,10 @@ class KibTool(object):
       help="ElasticSearch destination endpoint as host:port.",
     )
     l_parser.add_argument(
+      "--prefixto", type=str,
+      help="ElasticSearch destination prefix.",
+    )
+    l_parser.add_argument(
       "--kibto", type=str,
       help="Kibana destination index name.",
     )
