@@ -205,7 +205,7 @@ class KibTool(object):
             print("+++ Copying '%s/%s' from file '%s' to '%s/%s'" %
                   (l_headerDict["_type"], l_headerDict["_id"], self.m_args.filefrom, self.m_args.esto, self.m_args.kibto))
           else:
-            l_obj = KObject(None, None, l_headerDict["_type"], l_headerDict["_id"])
+            l_obj = KObject.build(None, None, l_headerDict["_type"], l_headerDict["_id"])
             l_obj.setJson( { "_source": json.loads(l_data) } )
             l_obj.copyToEs(self.m_esto, self.m_args.kibto, self.m_args.force)
           l_header = w_in.readline()
