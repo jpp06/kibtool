@@ -29,7 +29,6 @@ class TestCopyVisu(KibtoolTestCase):
       l_kibtool.execute()
       self.assertEquals(fake_out.getvalue().strip(), "")
       self.assertEquals(fake_err.getvalue().strip(), "")
-
     l_dst = self.client.search(index=l_dstName, doc_type="dashboard", body={
       "query": {
         "match_all": {
