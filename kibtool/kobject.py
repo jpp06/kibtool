@@ -71,6 +71,16 @@ class KObject(object):
       { "index" : { "_type" : self.m_type, "_id" : self.m_id } },
       self.m_json["_source"]
     ]
+  def toKibanaImpExp(self):
+    self.readFromEs()
+    if not self.m_json:
+      print("*** Can not get '%s' object from '%s'" % (self, self.m_index), file=sys.stderr)
+      sys.exit(3)
+    return {
+      "_type" : self.m_type,
+      "_id" : self.m_id,
+      "_source": self.m_json["_source"]
+    }
 
   def copyToEs(self, p_esTo, p_indexTo, p_force=False):
     if not self.m_json:
