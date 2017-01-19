@@ -197,18 +197,15 @@ class KibTool(object):
 
     if self.m_args.filefrom:
       with open(self.m_args.filefrom, "r") as w_in:
-        l_header = w_in.readline()
-        while l_header:
-          l_headerDict = json.loads(l_header)["index"]
-          l_data = w_in.readline()
-          if self.m_args.dry:
-            print("+++ Copying '%s/%s' from file '%s' to '%s/%s'" %
-                  (l_headerDict["_type"], l_headerDict["_id"], self.m_args.filefrom, self.m_args.esto, self.m_args.kibto))
-          else:
-            l_obj = KObject.build(None, None, l_headerDict["_type"], l_headerDict["_id"])
-            l_obj.setJson( { "_source": json.loads(l_data) } )
-            l_obj.copyToEs(self.m_esto, self.m_args.kibto, self.m_args.force)
-          l_header = w_in.readline()
+        l_objs = json.load(w_in)
+      for c_obj in l_objs:
+        if self.m_args.dry:
+          print("+++ Copying '%s/%s' from file '%s' to '%s/%s'" %
+                (c_obj["_type"], c_obj["_id"], self.m_args.filefrom, self.m_args.esto, self.m_args.kibto))
+        else:
+          l_obj = KObject.build(None, None, c_obj["_type"], c_obj["_id"])
+          l_obj.setJson( { "_source": c_obj["_source"] } )
+          l_obj.copyToEs(self.m_esto, self.m_args.kibto, self.m_args.force)
 
     if self.m_args.fileto:
       if self.m_args.dry:
@@ -217,11 +214,12 @@ class KibTool(object):
                 (c_obj.m_type, c_obj.m_idUtf8, self.m_args.esfrom, self.m_args.kibfrom, self.m_args.fileto))
       else:
         with open(self.m_args.fileto, "w") as w_out:
+          l_jsonObjs = []
           for c_obj in sorted(l_dependsL + l_kobjs):
             if self.m_args.debug:
               print("--- copying", c_obj.m_type, c_obj.m_idUtf8, file=sys.stderr)
-            for c_item in c_obj.toBulk():
-              print(json.dumps(c_item), file=w_out)
+            l_jsonObjs.append(c_obj.toKibanaImpExp())
+          print(json.dumps(l_jsonObjs, indent=2, sort_keys=True), file=w_out)
 
     if self.m_args.delete:
       for c_obj in sorted(l_dependsL + l_kobjs):

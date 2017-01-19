@@ -21,15 +21,12 @@ host, port = os.environ.get('TEST_ES_SERVER', 'localhost:9200').split(':')
 port = int(port) if port else 9200
 
 def getTypeIdFromFile(p_filename):
-  l_result= []
   with open(p_filename, "r") as w_in:
-    l_line = w_in.readline()
-    while l_line:
-      l_meta = json.loads(l_line)
-      l_result.append(l_meta["index"]["_type"] + "/" + l_meta["index"]["_id"])
-      l_data = w_in.readline()
-      l_line = w_in.readline()
-    return l_result
+    l_objs = json.load(w_in)
+  l_result= []
+  for c_obj in l_objs:
+    l_result.append(c_obj["_type"] + "/" + c_obj["_id"])
+  return l_result
 
 class TestReadWrite(KibtoolTestCase):
   def test_read_err(self):
