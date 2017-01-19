@@ -49,7 +49,7 @@ class KibTool(object):
       self.m_esfrom = Elasticsearch(hosts=[ l_host ], max_retries=2, timeout=200,
                                     connection_class=connection.RequestsHttpConnection)
       if self.m_args.cred:
-        l_header = make_headers(proxy_basic_auth=self.m_args.creds)
+        l_header = make_headers(proxy_basic_auth=self.m_args.cred)
         l_cnx = self.m_esfrom.transport.get_connection()
         l_cnx.session.headers['proxy-authorization'] = l_header['proxy-authorization']
     else:
@@ -76,7 +76,7 @@ class KibTool(object):
       self.m_esto = Elasticsearch(hosts=[ l_host ], max_retries=2, timeout=200,
                                     connection_class=connection.RequestsHttpConnection)
       if self.m_args.cred:
-        l_header = make_headers(proxy_basic_auth=self.m_args.creds)
+        l_header = make_headers(proxy_basic_auth=self.m_args.cred)
         l_cnx = self.m_esto.transport.get_connection()
         l_cnx.session.headers['proxy-authorization'] = l_header['proxy-authorization']
     else:
