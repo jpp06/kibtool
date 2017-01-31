@@ -339,15 +339,6 @@ class KibTool(object):
       "--cred", type=str,
       help="Proxy credentials to reach ElasticSearch cluster.",
     )
-    # proxy
-    l_parser.add_argument(
-      "--proxy", type=str,
-      help="Proxy to reach ElasticSearch cluster.",
-    )
-    l_parser.add_argument(
-      "--cred", type=str,
-      help="Proxy credentials to reach ElasticSearch cluster.",
-    )
     # modifiers
     l_parser.add_argument(
       "--depend", action='store_true', default=False,
