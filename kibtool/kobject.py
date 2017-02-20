@@ -131,10 +131,19 @@ class Visualization(KObject):
       l_search = Search(self.m_es, self.m_index, self.m_json["_source"]["savedSearchId"])
       l_result.add(l_search)
       l_result.update(l_search.getDepend(p_silent))
+    elif "visState" in self.m_json["_source"]:
+      l_visState = json.loads(self.m_json["_source"]["visState"])
+      if "type" in l_visState:
+        if "kibi_timeline" == l_visState["type"]:
+          # kibi timeline
+          for c_group in l_visState["params"]["groups"]:
+            l_result.add(Search(self.m_es, self.m_index, c_group["savedSearchId"]))
+            l_result.add(IndexPattern(self.m_es, self.m_index, c_group["indexPatternId"]))
     l_searchSource = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
     if "index" in l_searchSource:
       l_result.add(IndexPattern(self.m_es, self.m_index, l_searchSource["index"]))
     return l_result
+
 
 class Dashboard(KObject):
   def __init__(self, p_es, p_index, p_id):

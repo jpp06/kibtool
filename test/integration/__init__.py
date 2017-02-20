@@ -145,6 +145,24 @@ class KibtoolTestCase(TestCase):
     self.client.create(
       index=p_idx, doc_type="dashboard", id="dashboard-2", body=l_body,
     )
+    l_body = {
+      "title": "timeline_d",
+      "hits": 0,
+      "description": "",
+      "panelsJSON": "[{\"id\":\"timeline_v\",\"type\":\"visualization\",\"panelIndex\":1,\"size_x\":9,\"size_y\":5,\"col\":1,\"row\":1}]",
+      "optionsJSON": "{\"darkTheme\":false}",
+      "uiStateJSON": "{}",
+      "version": 1,
+      "timeRestore": True,
+      "timeTo": "now",
+      "timeFrom": "now-5y",
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}]}"
+      }
+    }
+    self.client.create(
+      index=p_idx, doc_type="dashboard", id="timeline_d", body=l_body,
+    )
   def add_kibana_visualization_docs(self, p_idx):
     l_body = {
       "title": "visualization 1",
@@ -188,6 +206,19 @@ class KibtoolTestCase(TestCase):
     self.client.create(
       index=p_idx, doc_type="visualization", id="visualization-2", body=l_body,
     )
+    l_body = {
+      "title": "timeline_v",
+      "visState": "{\"title\":\"New Visualization\",\"type\":\"kibi_timeline\",\"params\":{\"groups\":[{\"color\":\"#6f87d8\",\"endField\":null,\"groupLabel\":\"timeline\",\"id\":5000,\"indexPatternId\":\"gitlab-a-day\",\"labelField\":\"milestone.title\",\"savedSearchId\":\"timeline_s\",\"startField\":\"milestone.created_at\"}],\"groupsOnSeparateLevels\":false,\"notifyDataErrors\":false,\"selectValue\":\"id\",\"syncTime\":false},\"aggs\":[],\"listeners\":{}}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}},\"filter\":[]}"
+      }
+    }
+    self.client.create(
+      index=p_idx, doc_type="visualization", id="timeline_v", body=l_body,
+    )
   def add_kibana_search_docs(self, p_idx):
     l_body = {
       "title": "search 1",
@@ -203,6 +234,26 @@ class KibtoolTestCase(TestCase):
     self.client.create(
       index=p_idx, doc_type="search", id="search-1", body=l_body,
     )
+    l_body = {
+      "title": "timeline_s",
+      "description": "",
+      "hits": 0,
+      "columns": [
+        "_source"
+      ],
+      "sort": [
+        "@timestamp",
+        "desc"
+      ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"gitlab-a-day\",\"filter\":[],\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"require_field_match\":false,\"fragment_size\":2147483647},\"query\":{\"query_string\":{\"query\":\"_exists_:milestone.due_date\",\"analyze_wildcard\":true}}}"
+      }
+    }
+    self.client.create(
+      index=p_idx, doc_type="search", id="timeline_s", body=l_body,
+    )
+
   def add_kibana_index_pattern_docs(self, p_idx):
     l_body = {
       "title": "index-pattern-1",
@@ -213,7 +264,6 @@ class KibtoolTestCase(TestCase):
     self.client.create(
       index=p_idx, doc_type="index-pattern", id="index-pattern-1", body=l_body,
     )
-
 
   def close_index(self, name):
     self.client.indices.close(index=name)
