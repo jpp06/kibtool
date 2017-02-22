@@ -435,6 +435,10 @@ class KibTool(object):
          not l_result.orphan and not l_result.filefrom:
         l_parser.error("without --orphan/--filefrom, at least one of --dash, --dashid, --visu, --visuid, --search, --searchid is required")
         sys.exit(1)
+      # required args depending for --copy
+      if l_result.copy and not l_result.kibto:
+        l_parser.error("ok to copy, but where? --kibto is missing!")
+        sys.exit(1)
       # --orphan exclude selector
       if l_result.orphan and \
          ( l_result.dash or l_result.dashid or \
