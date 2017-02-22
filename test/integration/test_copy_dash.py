@@ -100,5 +100,18 @@ class TestCopyDash(KibtoolTestCase):
     self.assertEquals(l_dstIdx, l_dstName)
     self.assertEquals(l_src, l_dst)
 
+  def test_copy_kibto_error(self):
+    (l_srcName, l_dstName) = self.create_indices()
+
+    with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
+      with self.assertRaises(SystemExit) as w_se:
+        l_kibtool = kibtool.KibTool(["./test_kibtool", "--kibfrom", l_srcName,
+                                     "--dashid", "dashboard-1",
+                                     "--depend", "--copy"])
+        l_kibtool.execute()
+      self.assertEquals(fake_out.getvalue().strip(), "")
+      l_err = fake_err.getvalue().strip()
+      self.assertEquals(l_err[:7], "usage: ")
+      self.assertRegex(l_err, "ok to copy, but where\? --kibto is missing!$")
 
 # ./test_kibtool --kibfrom kibtool-src --kibto kibtool-dst --dashid dashboard-1 --depend --copy
