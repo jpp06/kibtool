@@ -27,7 +27,7 @@ class TestCheck(KibtoolTestCase):
                                    "--dashid", "dashboard-2",
                                    "--check"])
       l_kibtool.execute()
-      self.assertEquals(fake_out.getvalue().strip(), "--- object 'kibtool-src/visualization/no-visu' is missing")
+      self.assertEquals(fake_out.getvalue().strip(), "--- object 'kibtool-src/visualization/no-visu' is missing in 'dashboard-2'")
       self.assertEquals(fake_err.getvalue().strip(), "")
 
   def test_check_visu(self):
@@ -38,7 +38,7 @@ class TestCheck(KibtoolTestCase):
                                    "--visuid", "visualization-2",
                                    "--check"])
       l_kibtool.execute()
-      self.assertEquals(fake_out.getvalue().strip(), "--- object 'kibtool-src/search/no-search' is missing")
+      self.assertEquals(fake_out.getvalue().strip(), "--- object 'kibtool-src/search/no-search' is missing in 'visualization-2'")
       self.assertEquals(fake_err.getvalue().strip(), "")
 
   def test_check_dash_visu(self):
@@ -50,6 +50,6 @@ class TestCheck(KibtoolTestCase):
                                    "--visuid", "visualization-2",
                                    "--check"])
       l_kibtool.execute()
-      self.assertEquals(fake_out.getvalue().strip(), "--- object 'kibtool-src/search/no-search' is missing\n\
---- object 'kibtool-src/visualization/no-visu' is missing")
+      self.assertEquals(fake_out.getvalue().strip(), "--- object 'kibtool-src/search/no-search' is missing in 'visualization-2'\n\
+--- object 'kibtool-src/visualization/no-visu' is missing in 'dashboard-2'")
       self.assertEquals(fake_err.getvalue().strip(), "")

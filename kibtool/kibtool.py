@@ -6,6 +6,7 @@ import os
 import argparse
 import json
 from urllib3 import make_headers
+import codecs
 
 from elasticsearch import Elasticsearch, connection
 from elasticsearch import exceptions
@@ -165,15 +166,21 @@ class KibTool(object):
     for c_dashboard in l_dashboards:
       l_depends.update(c_dashboard.getDepend(True))
     l_visualizations = self.getVisualizations("*")
-    for c_visalization in l_visualizations:
-      if not c_visalization in l_depends:
-        l_result.add(c_visalization)
-        print(c_visalization.m_id)
+    for c_visualization in l_visualizations:
+      if not c_visualization in l_depends:
+        l_result.add(c_visualization)
+        print("visualization", c_visualization.m_idUtf8)
     l_searches = self.getSearches("*")
     for c_search in l_searches:
       if not c_search in l_depends:
         l_result.add(c_search)
-        print(c_search.m_id)
+        print("search", c_search.m_id)
+    return l_result
+
+  def findFieldsAndIndicies(self, p_objs):
+    l_result = set()
+    for c_obj in p_objs:
+      l_result |= c_obj.getFieldsAndIndicies()
     return l_result
 
   # MAIN
@@ -209,6 +216,27 @@ class KibTool(object):
         for c_kobj in l_dependsL + l_kobjs:
           print(c_kobj)
 
+    if self.m_args.fai:
+      l_allObjs = []
+      if self.m_args.filefrom:
+        with codecs.open(self.m_args.filefrom, "r", encoding="utf-8") as w_in:
+          l_objs = json.load(w_in)
+        for c_obj in l_objs:
+          l_obj = KObject.build(None, None, c_obj["_type"], c_obj["_id"])
+          l_obj.setJson( { "_source": c_obj["_source"] } )
+          l_allObjs.append(l_obj)
+      else:
+        l_allObjs = l_dependsL + l_kobjs
+
+      l_fais = self.findFieldsAndIndicies(l_allObjs)
+      for c_foi in l_fais:
+        print("---", c_foi[0], c_foi[1])
+      if 0 == len(l_fais):
+        print("---", "No fields or indicies needed for the selected objects.")
+      sys.exit(0)
+
+    # TODO bizarre side effect, why findOrphan may be used with --dash. Be more explicit
+    # TODO findOrphan returns a result which is then printer.
     if self.m_args.orphan:
       l_kobjs.extend(self.findOrphans())
 
@@ -217,7 +245,7 @@ class KibTool(object):
       for c_kobj in l_dependsL + l_kobjs:
         l_missingIds.update(c_kobj.getMissingDepend())
       for c_missing in sorted(l_missingIds):
-        print("--- object '%s' is missing" % (c_missing))
+        print("--- object '%s' is missing in '%s'" % (c_missing[0], c_missing[1]))
 
     if self.m_args.copy:
       if self.m_args.kibfrom == self.m_args.kibto and self.m_args.esfrom == self.m_args.esto:
@@ -383,6 +411,10 @@ class KibTool(object):
       help="print listed objects",
     )
     l_parser.add_argument(
+      "--fai", action='store_true', default=False,
+      help="print fields and indicies used by selected objects",
+    )
+    l_parser.add_argument(
       "--copy", action='store_true', default=False,
       help="copy listed objects from source index to destination index. By default, don't replace existing: use '--force'",
     )
@@ -417,6 +449,18 @@ class KibTool(object):
       if (l_result.fileto or l_result.filefrom) and l_result.copy:
         l_parser.error("--fileto/--filefrom and --copy are incompatible")
         sys.exit(1)
+      if l_result.filefrom and (l_result.dash or l_result.dashid):
+        l_parser.error("--filefrom and --dash/dashid are incompatible")
+        sys.exit(1)
+      if l_result.filefrom and (l_result.visu or l_result.visuid):
+        l_parser.error("--filefrom and --visu/visuid are incompatible")
+        sys.exit(1)
+      if l_result.filefrom and (l_result.search or l_result.searchid):
+        l_parser.error("--filefrom and --search/searchid are incompatible")
+        sys.exit(1)
+      if l_result.filefrom and l_result.depend:
+        l_parser.error("--filefrom and --depend are incompatible")
+        sys.exit(1)
       if l_result.fileto and l_result.filefrom:
         l_parser.error("--fileto and --filefrom are incompatible")
         sys.exit(1)
@@ -447,7 +491,7 @@ class KibTool(object):
         l_parser.error("with --orphan, no --dash, --dashid, --visu, --visuid, --search, --searchid expected")
         sys.exit(1)
       # print is the default action
-      if not l_result.copy and not l_result.delete and not l_result.check and not l_result.fileto:
+      if not l_result.fai and not l_result.copy and not l_result.delete and not l_result.check and not l_result.fileto:
         l_result.print = True
         if l_result.dry:
           print("+++ No object will be created, checked, or deleted: source index will be read to find and print object list.")

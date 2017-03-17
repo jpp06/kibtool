@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "visualization0",
+    "_type": "visualization",
+    "_source": {
+      "title": "visualization0",
+      "visState": "{\"title\":\"visualization0\",\"type\":\"timelion\",\"params\":{\"expression\":\".es(index='index6', timefield='field13',kibana='true').label( 'label0') .es(index=' index1', timefield='field13',kibana='true').label('label3')\",\"interval\":\"1w\"},\"aggs\":[],\"listeners\":{}}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}},\"filter\":[]}"
+      }
+    }
+  }
+]

@@ -107,3 +107,39 @@ class TestDashboard(TestCase):
     l_obj = kibtool.Visualization(l_es, "an_index", "an_id")
     l_obj.getDepend()
 
+
+class TestFai(TestCase):
+  def testString(self):
+    l_obj = kibtool.KObject(None, "an_index", "a_type", "an_id")
+    l_fai = l_obj.getFieldsFromQueryString("*")
+    self.assertEquals(l_fai, set())
+    l_fai = l_obj.getFieldsFromQueryString("F:V")
+    self.assertEquals(l_fai, set([ ("F", "field") ]))
+    l_fai = l_obj.getFieldsFromQueryString("_exists_:F")
+    self.assertEquals(l_fai, set([ ("F", "field") ]))
+    l_fai = l_obj.getFieldsFromQueryString("_missing_:F")
+    self.assertEquals(l_fai, set([ ("F", "field") ]))
+    l_fai = l_obj.getFieldsFromQueryString("F1:V1 OR F2:V2")
+    self.assertEquals(l_fai, set([ ("F1", "field"), ("F2", "field") ]))
+    l_fai = l_obj.getFieldsFromQueryString("F1:V1 AND F2:V2")
+    self.assertEquals(l_fai, set([ ("F1", "field"), ("F2", "field") ]))
+    l_fai = l_obj.getFieldsFromQueryString("NOT F:V")
+    self.assertEquals(l_fai, set([ ("F", "field") ]))
+    l_fai = l_obj.getFieldsFromQueryString("(F1:this OR F2:this) AND (F1:that OR F2:that)")
+    self.assertEquals(l_fai, set([ ("F1", "field"), ("F2", "field") ]))
+
+  def testDict(self):
+    l_obj = kibtool.KObject(None, "an_index", "a_type", "an_id")
+    l_fai = l_obj.getFieldsFromQuery({})
+    self.assertEquals(l_fai, set())
+    l_fai = l_obj.getFieldsFromQuery({"match":{"F":"V"}})
+    self.assertEquals(l_fai, set([ ("F", "field") ]))
+
+  def testExpr(self):
+    l_obj = kibtool.KObject(None, "an_index", "a_type", "an_id")
+    l_fai = l_obj.getFaiFromExpression("")
+    self.assertEquals(l_fai, set())
+    l_fai = l_obj.getFaiFromExpression(".es(index='I1', timefield='F1',kibana='true').label( 'label0') .es(index=' I2', timefield='F2',kibana='true').label('label3')")
+    self.assertEquals(l_fai, set([ ("F1", "field"), ("F2", "field"), ("I1", "index"), ("I2", "index") ]))
+
+#  {“query”: { “match”: { “_all”: “meaning” } } }
