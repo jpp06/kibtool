@@ -120,7 +120,7 @@ class TestOrphan(KibtoolTestCase):
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
       l_kibtool = kibtool.KibTool(["./test_kibtool", "--orphan", "--kibfrom", l_srcName])
       l_kibtool.execute()
-      self.assertEquals(fake_out.getvalue().strip(), "visualization-2")
+      self.assertEquals(fake_out.getvalue().strip(), "visualization visualization-2")
       self.assertEquals(fake_err.getvalue().strip(), "")
 
     self.assertEquals(
@@ -134,7 +134,7 @@ class TestOrphan(KibtoolTestCase):
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
       l_kibtool = kibtool.KibTool(["./test_kibtool", "--orphan", "--kibfrom", l_srcName, "--delete"])
       l_kibtool.execute()
-      self.assertEquals(fake_out.getvalue().strip(), "visualization-2")
+      self.assertEquals(fake_out.getvalue().strip(), "visualization visualization-2")
       self.assertEquals(fake_err.getvalue().strip(), "")
 
     self.assertEquals(

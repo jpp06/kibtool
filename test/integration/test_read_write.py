@@ -61,7 +61,7 @@ class TestReadWrite(KibtoolTestCase):
 
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
       with self.assertRaises(SystemExit) as w_se:
-        l_kibtool = kibtool.KibTool(["./test_kibtool", "--filefrom", "fake_file", "--esfrom", "localhost:9200", "--dash", "fake_dash"])
+        l_kibtool = kibtool.KibTool(["./test_kibtool", "--filefrom", "fake_file", "--esfrom", "localhost:9200"])
         self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
       l_err = fake_err.getvalue().strip()
@@ -75,7 +75,7 @@ class TestReadWrite(KibtoolTestCase):
 
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
       with self.assertRaises(SystemExit) as w_se:
-        l_kibtool = kibtool.KibTool(["./test_kibtool", "--filefrom", "fake_file", "--kibfrom", "fake_index", "--dash", "fake_dash"])
+        l_kibtool = kibtool.KibTool(["./test_kibtool", "--filefrom", "fake_file", "--kibfrom", "fake_index"])
         self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
       l_err = fake_err.getvalue().strip()
@@ -173,7 +173,7 @@ class TestReadWrite(KibtoolTestCase):
 
     with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
       with self.assertRaises(SystemExit) as w_se:
-        l_kibtool = kibtool.KibTool(["./test_kibtool", "--filefrom", "fake_file", "--fileto", "fake_file", "--dash", "fake_dash"])
+        l_kibtool = kibtool.KibTool(["./test_kibtool", "--filefrom", "fake_file", "--fileto", "fake_file"])
         self.assertEqual(w_se.exception, "Error")
       self.assertEquals(fake_out.getvalue().strip(), "")
       l_err = fake_err.getvalue().strip()
