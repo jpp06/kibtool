@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "search0",
+    "_type": "search",
+    "_source": {
+      "title": "search0",
+      "description": "",
+      "hits": 0,
+      "columns": [
+        "field10",
+        "field0",
+        "field9",
+        "field12",
+        "field20",
+        "field16",
+        "field8"
+      ],
+      "sort": [
+        "field13",
+        "desc"
+      ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[],\"highlight\":{\"fields\":{\"*\":{}},\"fragment_size\":2147483647,\"post_tags\":[\"@/kibana-highlighted-field@\"],\"pre_tags\":[\"@kibana-highlighted-field@\"],\"require_field_match\":false},\"index\":\"index2\",\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}}}"
+      }
+    }
+  }
+]
