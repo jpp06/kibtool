@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import re
 import json
 from elasticsearch import exceptions
 
@@ -95,8 +96,39 @@ class KObject(object):
     for c_dep in l_deps:
       c_dep.readFromEs()
       if not c_dep.m_json:
-        l_missings.append(c_dep)
+        l_missings.append((c_dep, self.m_idUtf8))
     return l_missings
+
+  def getFieldsAndIndicies(self):
+    return set()
+  def getFieldsFromQueryString(self, p_query):
+    l_result = set()
+    if "*" == p_query:
+      return l_result
+    l_query = re.sub(r"\[[^]]*\]", "RANGE", p_query)
+    l_query = re.sub(r"\(|\)", "", l_query)
+    l_items = l_query.split(" ")
+    for c_item in l_items:
+      if ":" in c_item:
+        l_field, l_value = c_item.split(":")
+        if l_field.startswith("_"): # _exists_, _missing_
+          l_result.add((l_value, "field"))
+        else:
+          l_result.add((l_field, "field"))
+      elif c_item not in ["AND", "OR", "NOT"]:
+        print("***FFQS", json.dumps(l_query), l_result, file=sys.stderr)
+        sys.exit(1)
+    return l_result
+  def getFieldsFromQuery(self, p_query):
+    l_result = set()
+    if 0 == len(p_query):
+      return l_result
+    if "match" in p_query:
+      l_result |= set([ (_, "field") for _ in p_query["match"].keys() ])
+    else:
+      print("***FFQ", json.dumps(p_query), file=sys.stderr)
+      sys.exit(1)
+    return l_result
 
 class Config(KObject):
   def __init__(self, p_es, p_index, p_id):
@@ -116,6 +148,21 @@ class Search(KObject):
     l_searchSource = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
     if "index" in l_searchSource:
       return [ IndexPattern(self.m_es, self.m_index, l_searchSource["index"]) ]
+  def getFieldsAndIndicies(self):
+    self.readFromEs()
+    l_source = self.m_json["_source"]
+    #print("---S", json.dumps(l_source, indent=2))
+    l_result = set()
+    if "columns" in l_source:
+      l_result |= set([ (_, "field") for _ in l_source["columns"] ])
+    if "sort" in l_source:
+      l_result.add((l_source["sort"][0], "field"))
+    if "kibanaSavedObjectMeta" in l_source and "searchSourceJSON" in l_source["kibanaSavedObjectMeta"]:
+      l_ss = json.loads(l_source["kibanaSavedObjectMeta"]["searchSourceJSON"])
+      if "query" in l_ss and "query_string" in l_ss["query"] and "query" in l_ss["query"]["query_string"]:
+        l_query = l_ss["query"]["query_string"]["query"]
+        l_result |= self.getFieldsFromQueryString(l_query)
+    return l_result
 
 class Visualization(KObject):
   def __init__(self, p_es, p_index, p_id):
@@ -143,6 +190,28 @@ class Visualization(KObject):
     if "index" in l_searchSource:
       l_result.add(IndexPattern(self.m_es, self.m_index, l_searchSource["index"]))
     return l_result
+  def getFieldsAndIndicies(self):
+    self.readFromEs()
+    l_ss = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
+    l_visState = json.loads(self.m_json["_source"]["visState"])
+    l_result = set()
+    if "filter" in l_ss:
+      for c_filter in l_ss["filter"]:
+        if "query" in c_filter and "query_string" in c_filter["query"] and "query" in c_filter["query"]["query_string"]:
+          l_query = c_filter["query"]["query_string"]["query"]
+          l_result |= self.getFieldsFromQueryString(l_query)
+        else:
+          print("***V", json.dumps(c_filter, indent=2), file=sys.stderr)
+          sys.exit(1)
+    if "query" in l_ss:
+      if "query_string" in l_ss["query"] and "query" in l_ss["query"]["query_string"]:
+        l_query = l_ss["query"]["query_string"]["query"]
+        l_result |= self.getFieldsFromQueryString(l_query)
+      else:
+        l_result |= self.getFieldsFromQuery(c_filter["query"])
+    if "index" in l_ss:
+      l_result.add((l_ss["index"], "index"))
+    return l_result
 
 
 class Dashboard(KObject):
@@ -166,4 +235,28 @@ class Dashboard(KObject):
       else:
         print("*** Unknown object type '%s' in dashboard" % (c_panel["type"]), file=sys.stderr)
         sys.exit(1)
+    return l_result
+  def getFieldsAndIndicies(self):
+    self.readFromEs()
+    l_searchSource = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
+    l_result = set()
+    if "filter" in l_searchSource:
+      for c_filter in l_searchSource["filter"]:
+        if "query" in c_filter:
+          if "query_string" in c_filter["query"] and "query" in c_filter["query"]["query_string"]:
+            l_query = c_filter["query"]["query_string"]["query"]
+            l_result |= self.getFieldsFromQueryString(l_query)
+          else:
+            l_result |= self.getFieldsFromQuery(c_filter["query"])
+        else:
+          print("***D", json.dumps(c_filter, indent=2), file=sys.stderr)
+          sys.exit(1)
+        if "meta" in c_filter:
+          l_meta = c_filter["meta"]
+          l_result.add((l_meta["index"], "index"))
+          l_result.add((l_meta["key"], "field"))
+        else:
+          print("***D", json.dumps(c_filter, indent=2), file=sys.stderr)
+          sys.exit(1)
+
     return l_result

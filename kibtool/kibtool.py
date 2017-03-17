@@ -165,15 +165,21 @@ class KibTool(object):
     for c_dashboard in l_dashboards:
       l_depends.update(c_dashboard.getDepend(True))
     l_visualizations = self.getVisualizations("*")
-    for c_visalization in l_visualizations:
-      if not c_visalization in l_depends:
-        l_result.add(c_visalization)
-        print(c_visalization.m_id)
+    for c_visualization in l_visualizations:
+      if not c_visualization in l_depends:
+        l_result.add(c_visualization)
+        print("visualizations", c_visualization.m_idUtf8)
     l_searches = self.getSearches("*")
     for c_search in l_searches:
       if not c_search in l_depends:
         l_result.add(c_search)
-        print(c_search.m_id)
+        print("search", c_search.m_id)
+    return l_result
+
+  def findFieldsAndIndicies(self, p_objs):
+    l_result = set()
+    for c_obj in p_objs:
+      l_result |= c_obj.getFieldsAndIndicies()
     return l_result
 
   # MAIN
@@ -209,6 +215,16 @@ class KibTool(object):
         for c_kobj in l_dependsL + l_kobjs:
           print(c_kobj)
 
+    if self.m_args.fai:
+      l_fais = self.findFieldsAndIndicies(l_dependsL + l_kobjs)
+      for c_foi in l_fais:
+        print("---", c_foi)
+      else:
+        print("---", "No fields or indicies needed for the selected objects.")
+      sys.exit(0)
+
+    # TODO bizarre side effect, why findOrphan may be used with --dash. Be more explicit
+    # TODO findOrphan returns a result which is then printer.
     if self.m_args.orphan:
       l_kobjs.extend(self.findOrphans())
 
@@ -217,7 +233,7 @@ class KibTool(object):
       for c_kobj in l_dependsL + l_kobjs:
         l_missingIds.update(c_kobj.getMissingDepend())
       for c_missing in sorted(l_missingIds):
-        print("--- object '%s' is missing" % (c_missing))
+        print("--- object '%s' is missing in '%s'" % (c_missing[0], c_missing[1]))
 
     if self.m_args.copy:
       if self.m_args.kibfrom == self.m_args.kibto and self.m_args.esfrom == self.m_args.esto:
@@ -383,6 +399,10 @@ class KibTool(object):
       help="print listed objects",
     )
     l_parser.add_argument(
+      "--fai", action='store_true', default=False,
+      help="print fields and indicies used by selected objects",
+    )
+    l_parser.add_argument(
       "--copy", action='store_true', default=False,
       help="copy listed objects from source index to destination index. By default, don't replace existing: use '--force'",
     )
@@ -447,7 +467,7 @@ class KibTool(object):
         l_parser.error("with --orphan, no --dash, --dashid, --visu, --visuid, --search, --searchid expected")
         sys.exit(1)
       # print is the default action
-      if not l_result.copy and not l_result.delete and not l_result.check and not l_result.fileto:
+      if not l_result.fai and not l_result.copy and not l_result.delete and not l_result.check and not l_result.fileto:
         l_result.print = True
         if l_result.dry:
           print("+++ No object will be created, checked, or deleted: source index will be read to find and print object list.")
