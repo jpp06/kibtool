@@ -6,6 +6,7 @@ import os
 import argparse
 import json
 from urllib3 import make_headers
+import codecs
 
 from elasticsearch import Elasticsearch, connection
 from elasticsearch import exceptions
@@ -216,10 +217,21 @@ class KibTool(object):
           print(c_kobj)
 
     if self.m_args.fai:
-      l_fais = self.findFieldsAndIndicies(l_dependsL + l_kobjs)
-      for c_foi in l_fais:
-        print("---", c_foi)
+      l_allObjs = []
+      if self.m_args.filefrom:
+        with codecs.open(self.m_args.filefrom, "r", encoding="utf-8") as w_in:
+          l_objs = json.load(w_in)
+        for c_obj in l_objs:
+          l_obj = KObject.build(None, None, c_obj["_type"], c_obj["_id"])
+          l_obj.setJson( { "_source": c_obj["_source"] } )
+          l_allObjs.append(l_obj)
       else:
+        l_allObjs = l_dependsL + l_kobjs
+
+      l_fais = self.findFieldsAndIndicies(l_allObjs)
+      for c_foi in l_fais:
+        print("---", c_foi[0], c_foi[1])
+      if 0 == len(l_fais):
         print("---", "No fields or indicies needed for the selected objects.")
       sys.exit(0)
 
@@ -436,6 +448,18 @@ class KibTool(object):
         sys.exit(1)
       if (l_result.fileto or l_result.filefrom) and l_result.copy:
         l_parser.error("--fileto/--filefrom and --copy are incompatible")
+        sys.exit(1)
+      if l_result.filefrom and (l_result.dash or l_result.dashid):
+        l_parser.error("--filefrom and --dash/dashid are incompatible")
+        sys.exit(1)
+      if l_result.filefrom and (l_result.visu or l_result.visuid):
+        l_parser.error("--filefrom and --visu/visuid are incompatible")
+        sys.exit(1)
+      if l_result.filefrom and (l_result.search or l_result.searchid):
+        l_parser.error("--filefrom and --search/searchid are incompatible")
+        sys.exit(1)
+      if l_result.filefrom and l_result.depend:
+        l_parser.error("--filefrom and --depend are incompatible")
         sys.exit(1)
       if l_result.fileto and l_result.filefrom:
         l_parser.error("--fileto and --filefrom are incompatible")

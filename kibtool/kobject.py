@@ -101,6 +101,7 @@ class KObject(object):
 
   def getFieldsAndIndicies(self):
     return set()
+
   def getFieldsFromQueryString(self, p_query):
     l_result = set()
     if "*" == p_query:
@@ -119,6 +120,7 @@ class KObject(object):
         print("***FFQS", json.dumps(l_query), l_result, file=sys.stderr)
         sys.exit(1)
     return l_result
+
   def getFieldsFromQuery(self, p_query):
     l_result = set()
     if 0 == len(p_query):
@@ -128,6 +130,23 @@ class KObject(object):
     else:
       print("***FFQ", json.dumps(p_query), file=sys.stderr)
       sys.exit(1)
+    return l_result
+
+  def getFaiFromExpression(self, p_expr):
+    l_result = set()
+    if 0 == len(p_expr):
+      return l_result
+    l_es = 0
+    l_es = p_expr.find(".es(", l_es)
+    while -1 != l_es:
+      l_paren = p_expr.find(")", l_es)
+      l_esExpr = p_expr[l_es + 4:l_paren]
+      l_index = re.search(r"index *= *' *([^']+) *'", l_esExpr)
+      l_result.add((l_esExpr[l_index.start(1) : l_index.end(1)], "index"))
+      l_field = re.search(r"timefield *= *' *([^']+) *'", l_esExpr)
+      if l_field:
+        l_result.add((l_esExpr[l_field.start(1) : l_field.end(1)], "field"))
+      l_es = p_expr.find(".es(", l_paren + 1)
     return l_result
 
 class Config(KObject):
@@ -162,7 +181,10 @@ class Search(KObject):
       if "query" in l_ss and "query_string" in l_ss["query"] and "query" in l_ss["query"]["query_string"]:
         l_query = l_ss["query"]["query_string"]["query"]
         l_result |= self.getFieldsFromQueryString(l_query)
+      if "index" in l_ss:
+        l_result.add((l_ss["index"], "index"))
     return l_result
+
 
 class Visualization(KObject):
   def __init__(self, p_es, p_index, p_id):
@@ -192,9 +214,11 @@ class Visualization(KObject):
     return l_result
   def getFieldsAndIndicies(self):
     self.readFromEs()
+    l_result = set()
     l_ss = json.loads(self.m_json["_source"]["kibanaSavedObjectMeta"]["searchSourceJSON"])
     l_visState = json.loads(self.m_json["_source"]["visState"])
-    l_result = set()
+    if "type" in l_visState and "timelion" == l_visState["type"]:
+      l_result |= self.getFaiFromExpression(l_visState["params"]["expression"])
     if "filter" in l_ss:
       for c_filter in l_ss["filter"]:
         if "query" in c_filter and "query_string" in c_filter["query"] and "query" in c_filter["query"]["query_string"]:
@@ -255,8 +279,4 @@ class Dashboard(KObject):
           l_meta = c_filter["meta"]
           l_result.add((l_meta["index"], "index"))
           l_result.add((l_meta["key"], "field"))
-        else:
-          print("***D", json.dumps(c_filter, indent=2), file=sys.stderr)
-          sys.exit(1)
-
     return l_result
