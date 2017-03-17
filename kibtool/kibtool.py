@@ -168,7 +168,7 @@ class KibTool(object):
     for c_visualization in l_visualizations:
       if not c_visualization in l_depends:
         l_result.add(c_visualization)
-        print("visualizations", c_visualization.m_idUtf8)
+        print("visualization", c_visualization.m_idUtf8)
     l_searches = self.getSearches("*")
     for c_search in l_searches:
       if not c_search in l_depends:
