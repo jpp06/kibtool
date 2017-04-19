@@ -1,3 +1,6 @@
+
+dist: xenial
+
 language: python
 
 python:
@@ -10,11 +13,6 @@ os: linux
 
 cache:
   pip: true
-
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
 
 install:
   - pip install -r requirements.txt
