@@ -27,7 +27,7 @@ class KibTool(object):
 
     if self.m_args.debug:
       print("--- debug: arg list", file=sys.stderr)
-      for c_arg, c_val in vars(self.m_args).items():
+      for c_arg, c_val in sorted(vars(self.m_args).items()):
         print(c_arg, c_val, file=sys.stderr)
       print("--- debug: end arg list", file=sys.stderr)
     # source es cluster
@@ -48,13 +48,14 @@ class KibTool(object):
                  "port": int(self.m_args.portfrom)
       }
     if self.m_args.proxy:
-      os.environ['HTTP_PROXY'] = self.m_args.proxy
+      os.environ["HTTP_PROXY"] = self.m_args.proxy
       self.m_esfrom = Elasticsearch(hosts=[ l_host ], max_retries=2, timeout=200,
                                     connection_class=connection.RequestsHttpConnection)
       if self.m_args.cred:
-        l_header = make_headers(proxy_basic_auth=self.m_args.cred)
+        l_headers = make_headers(proxy_basic_auth=self.m_args.cred)
         l_cnx = self.m_esfrom.transport.get_connection()
-        l_cnx.session.headers['proxy-authorization'] = l_header['proxy-authorization']
+        l_cnx.session.headers["proxy-authorization"] = l_headers["proxy-authorization"]
+        l_cnx.session.headers["Content-Length"] = 0
     else:
       self.m_esfrom = Elasticsearch(hosts=[ l_host ], max_retries=2, timeout=200)
     # destination es cluster
@@ -75,18 +76,18 @@ class KibTool(object):
                  "port": int(self.m_args.portto)
       }
     if self.m_args.proxy:
-      os.environ['HTTP_PROXY'] = self.m_args.proxy
+      os.environ["HTTP_PROXY"] = self.m_args.proxy
       self.m_esto = Elasticsearch(hosts=[ l_host ], max_retries=2, timeout=200,
                                     connection_class=connection.RequestsHttpConnection)
       if self.m_args.cred:
-        l_header = make_headers(proxy_basic_auth=self.m_args.cred)
+        l_headers = make_headers(proxy_basic_auth=self.m_args.cred)
         l_cnx = self.m_esto.transport.get_connection()
-        l_cnx.session.headers['proxy-authorization'] = l_header['proxy-authorization']
+        l_cnx.session.headers["proxy-authorization"] = l_headers["proxy-authorization"]
     elif self.m_args.cred:
       self.m_esto = Elasticsearch(hosts=[ l_host ], connection_class=connection.RequestsHttpConnection)
-      l_header = make_headers(basic_auth=self.m_args.cred)
+      l_headers = make_headers(basic_auth=self.m_args.cred)
       l_cnx = self.m_esto.transport.get_connection()
-      l_cnx.session.headers['authorization'] = l_header['authorization']
+      l_cnx.session.headers["authorization"] = l_headers["authorization"]
     else:
       self.m_esto = Elasticsearch(hosts=[ l_host ], max_retries=2, timeout=200)
 
@@ -111,12 +112,12 @@ class KibTool(object):
       },
       "query": {
         "query_string" : {
-          "query" : "title:\"" + KibTool.toLuceneSyntax(p_luceneReq) + "\" AND _type:" + p_type
+          "query": "title:\"" + KibTool.toLuceneSyntax(p_luceneReq) + "\" AND _type:" + p_type
         }
       }
     }
     if self.m_args.debug:
-      print("---", l_request)
+      print("---", json.dumps(l_request, indent=2, sort_keys=True))
     try:
       l_response = self.m_esfrom.search(index=self.m_args.kibfrom, doc_type=p_type, body=l_request)
     except exceptions.NotFoundError:
