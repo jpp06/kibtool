@@ -437,41 +437,29 @@ class KibTool(object):
       # incompatible args
       if l_result.orphan and l_result.copy:
         l_parser.error("--orphan and --copy are incompatible")
-        sys.exit(1)
       if l_result.orphan and l_result.check:
         l_parser.error("--orphan and --check are incompatible")
-        sys.exit(1)
       if l_result.orphan and l_result.kibto:
         l_parser.error("--orphan and --kibto are incompatible")
-        sys.exit(1)
       if (l_result.fileto or l_result.filefrom) and l_result.delete:
         l_parser.error("--fileto/--filefrom and --delete are incompatible")
-        sys.exit(1)
       if (l_result.fileto or l_result.filefrom) and l_result.copy:
         l_parser.error("--fileto/--filefrom and --copy are incompatible")
-        sys.exit(1)
       if l_result.filefrom and (l_result.dash or l_result.dashid):
         l_parser.error("--filefrom and --dash/dashid are incompatible")
-        sys.exit(1)
       if l_result.filefrom and (l_result.visu or l_result.visuid):
         l_parser.error("--filefrom and --visu/visuid are incompatible")
-        sys.exit(1)
       if l_result.filefrom and (l_result.search or l_result.searchid):
         l_parser.error("--filefrom and --search/searchid are incompatible")
-        sys.exit(1)
       if l_result.filefrom and l_result.depend:
         l_parser.error("--filefrom and --depend are incompatible")
-        sys.exit(1)
       if l_result.fileto and l_result.filefrom:
         l_parser.error("--fileto and --filefrom are incompatible")
-        sys.exit(1)
       l_seenArgs = set(p_args[1:]) # distinguish default values and user specified values
       if l_result.fileto and ("--esto" in l_seenArgs or "--kibto" in l_seenArgs):
         l_parser.error("--fileto and --esto/--kibto are incompatible")
-        sys.exit(1)
       if l_result.filefrom and ("--esfrom" in l_seenArgs or "--kibfrom" in l_seenArgs):
         l_parser.error("--filefrom and --esfrom/--kibfrom are incompatible")
-        sys.exit(1)
 
       # required args
       if not l_result.dash and not l_result.dashid and \
@@ -479,18 +467,15 @@ class KibTool(object):
          not l_result.search and not l_result.searchid and \
          not l_result.orphan and not l_result.filefrom:
         l_parser.error("without --orphan/--filefrom, at least one of --dash, --dashid, --visu, --visuid, --search, --searchid is required")
-        sys.exit(1)
       # required args depending for --copy
       if l_result.copy and not l_result.kibto:
         l_parser.error("ok to copy, but where? --kibto is missing!")
-        sys.exit(1)
       # --orphan exclude selector
       if l_result.orphan and \
          ( l_result.dash or l_result.dashid or \
            l_result.visu or l_result.visuid or \
            l_result.search or l_result.searchid ):
         l_parser.error("with --orphan, no --dash, --dashid, --visu, --visuid, --search, --searchid expected")
-        sys.exit(1)
       # print is the default action
       if not l_result.fai and not l_result.copy and not l_result.delete and not l_result.check and not l_result.fileto:
         l_result.print = True
