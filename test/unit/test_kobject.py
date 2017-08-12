@@ -42,6 +42,13 @@ class TestKObject(TestCase):
     l_obj2 = kibtool.KObject(2, "an_index", "a_type", "an_id")
     self.assertEquals(l_obj1, l_obj2)
 
+  def testCmp(self):
+    l_obj1 = kibtool.KObject(1, "1", "2", "3")
+    l_obj2 = kibtool.KObject(2, "4", "5", "6")
+    self.assertTrue(l_obj1 < l_obj2)
+    self.assertFalse(l_obj1 > l_obj2)
+    self.assertFalse(l_obj1 == l_obj2)
+
   def testNeq(self):
     l_obj1 = kibtool.KObject(1, "an_index", "a_type", "an_id")
     l_obj2 = kibtool.KObject(2, "an_index1", "a_type", "an_id")
@@ -111,6 +118,7 @@ class TestDashboard(TestCase):
 class TestFai(TestCase):
   def testString(self):
     l_obj = kibtool.KObject(None, "an_index", "a_type", "an_id")
+    self.assertEquals(l_obj.getFieldsAndIndicies(), set())
     l_fai = l_obj.getFieldsFromQueryString("*")
     self.assertEquals(l_fai, set())
     l_fai = l_obj.getFieldsFromQueryString("F:V")
@@ -128,12 +136,30 @@ class TestFai(TestCase):
     l_fai = l_obj.getFieldsFromQueryString("(F1:this OR F2:this) AND (F1:that OR F2:that)")
     self.assertEquals(l_fai, set([ ("F1", "field"), ("F2", "field") ]))
 
-  def testDict(self):
+  def testStringError(self):
+    with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
+      l_obj = kibtool.KObject(None, "an_index", "a_type", "an_id")
+      with self.assertRaises(SystemExit) as w_se:
+        l_fai = l_obj.getFieldsFromQueryString("F1:this TOTO F2:this")
+        self.assertEqual(w_se.exception, "Error")
+    self.assertEquals(fake_out.getvalue().strip(), "")
+    self.assertEquals(fake_err.getvalue().strip(), "***FFQS \"F1:this TOTO F2:this\" {('F1', 'field')}")
+
+  def testQuery(self):
     l_obj = kibtool.KObject(None, "an_index", "a_type", "an_id")
     l_fai = l_obj.getFieldsFromQuery({})
     self.assertEquals(l_fai, set())
     l_fai = l_obj.getFieldsFromQuery({"match":{"F":"V"}})
     self.assertEquals(l_fai, set([ ("F", "field") ]))
+
+  def testQueryError(self):
+    with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
+      l_obj = kibtool.KObject(None, "an_index", "a_type", "an_id")
+      with self.assertRaises(SystemExit) as w_se:
+        l_fai = l_obj.getFieldsFromQuery({"toto":{"F":"V"}})
+        self.assertEqual(w_se.exception, "Error")
+    self.assertEquals(fake_out.getvalue().strip(), "")
+    self.assertEquals(fake_err.getvalue().strip(), "***FFQ {\"toto\": {\"F\": \"V\"}}")
 
   def testExpr(self):
     l_obj = kibtool.KObject(None, "an_index", "a_type", "an_id")

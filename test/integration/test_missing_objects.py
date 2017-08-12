@@ -75,3 +75,25 @@ class TestMssingObjects(KibtoolTestCase):
     })
     self.assertEquals(l_dst["hits"]["total"], 0)
 
+  def test_dash_depend_silent(self):
+    (l_srcName, l_dstName) = self.create_indices()
+
+    with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
+      l_kibtool = kibtool.KibTool(["./test_kibtool", "--kibfrom", l_srcName, "--kibto", l_dstName,
+                                   "--dashid", "oups",
+                                   "--depend"])
+      l_kibtool.execute()
+      self.assertEquals(fake_out.getvalue().strip(), "kibtool-src/dashboard/oups")
+      self.assertEquals(fake_err.getvalue().strip(), "*** Can not get 'kibtool-src/dashboard/oups' object from 'kibtool-src'")
+
+  # same as above without err message
+  def test_viz_depend_silent(self):
+    (l_srcName, l_dstName) = self.create_indices()
+
+    with patch('sys.stdout', new=StringIO()) as fake_out, patch('sys.stderr', new=StringIO()) as fake_err:
+      l_kibtool = kibtool.KibTool(["./test_kibtool", "--kibfrom", l_srcName, "--kibto", l_dstName,
+                                   "--visuid", "oups",
+                                   "--depend"])
+      l_kibtool.execute()
+      self.assertEquals(fake_out.getvalue().strip(), "kibtool-src/visualization/oups")
+      self.assertEquals(fake_err.getvalue().strip(), "*** Can not get 'kibtool-src/visualization/oups' object from 'kibtool-src'")
