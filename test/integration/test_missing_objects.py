@@ -86,7 +86,6 @@ class TestMssingObjects(KibtoolTestCase):
       self.assertEquals(fake_out.getvalue().strip(), "kibtool-src/dashboard/oups")
       self.assertEquals(fake_err.getvalue().strip(), "*** Can not get 'kibtool-src/dashboard/oups' object from 'kibtool-src'")
 
-  # same as above without err message
   def test_viz_depend_silent(self):
     (l_srcName, l_dstName) = self.create_indices()
 
