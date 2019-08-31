@@ -5,6 +5,10 @@ Have a lot of dashboards and visualizations to move from one Kibana to another?
 This tool helps you to manage Kibana objects with a command line. It will save
 you lots of mouse clicks, and probably avoid error during click sessions!
 
+I am simplfying the toolbox and build it with `bash` and `jq`. Those new BASH
+scripts are located in `./scripts` and documented 
+
+.. _scripts doc: https://github.com/elastic/elasticsearch-py
 
 Compatibility Matrix
 --------------------
