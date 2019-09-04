@@ -60,3 +60,8 @@ cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | 
     sed -e 's/  "____id":/  "_id":/' > ${g_file}
 
 # NYI for timelion-sheet
+
+
+
+#jq -s '.[]' ./toto.dashboard.json ./toto.visualization.json ./toto.search.json ./toto.index-pattern.json ./toto.config.json > ./toto.json
+jq '[ .[][] ]' ${p_base}.dashboard.json ${p_base}.visualization.json ${p_base}.search.json ${p_base}.index-pattern.json ${p_base}.config.json > ${p_base}.json
