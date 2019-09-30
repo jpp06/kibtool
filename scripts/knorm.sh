@@ -1,67 +1,81 @@
-#! /bin/bash
+#! /usr/bin/env bash
 
-if [ -z "$1" ]
+g_script="$(readlink -f ${BASH_SOURCE[0]})"
+g_base="$(dirname ${g_script})"
+
+# options
+source ${g_base}/../bash-argsparse-1.8/argsparse.sh
+argsparse_use_option outbase     "base filename for storing exported Kibana objects" short:o value mandatory
+argsparse_use_option unstringify "unstringify JSON values"                           short:u exclude:stringify
+argsparse_use_option stringify   "stringify JSON values"                             short:s exclude:unstringify
+argsparse_parse_options "$@"
+if ! argsparse_is_option_set unstringify && ! argsparse_is_option_set unstringify
 then
-    echo "*** Missing basename" >&2
-    exit 1
+  printf "One of 'stringify' or 'unstringify' is mandatory\n" >&2
+  usage
 fi
 
-p_base=$1
-p_what=fromjson
+# let's go
+o_outbase="${program_options[outbase]}"
+if argsparse_is_option_set unstringify
+then
+  p_jq_operation=fromjson
+fi
+if argsparse_is_option_set stringify
+then
+  p_jq_operation=tojson
+fi
 
-g_file=${p_base}.dashboard.json
+g_file=${o_outbase}.dashboard.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${p_base}.dashboard.json ${g_temp}
+mv ${o_outbase}.dashboard.json ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
-( select(.type == "dashboard") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_what}' | .attributes.panelsJSON |= '${p_what}' | .attributes.optionsJSON |= '${p_what}' | . )
+( select(.type == "dashboard") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_jq_operation}' | .attributes.panelsJSON |= '${p_jq_operation}' | .attributes.optionsJSON |= '${p_jq_operation}' | . )
 ]' | \
     sed -e 's/  "____id":/  "_id":/' > ${g_file}
 
-g_file=${p_base}.visualization.json
+g_file=${o_outbase}.visualization.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${p_base}.visualization.json ${g_temp}
+mv ${o_outbase}.visualization.json ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
-( select(.type == "visualization") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_what}' | .attributes.visState |= '${p_what}' | .attributes.uiStateJSON |= '${p_what}' | . )
+( select(.type == "visualization") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_jq_operation}' | .attributes.visState |= '${p_jq_operation}' | .attributes.uiStateJSON |= '${p_jq_operation}' | . )
 ]' | \
     sed -e 's/  "____id":/  "_id":/' > ${g_file}
 
-g_file=${p_base}.search.json
+g_file=${o_outbase}.search.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${p_base}.search.json ${g_temp}
+mv ${o_outbase}.search.json ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
-( select(.type == "search") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_what}' | . )
+( select(.type == "search") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_jq_operation}' | . )
 ]' | \
     sed -e 's/  "____id":/  "_id":/' > ${g_file}
 
-g_file=${p_base}.index-pattern.json
+g_file=${o_outbase}.index-pattern.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${p_base}.index-pattern.json ${g_temp}
+mv ${o_outbase}.index-pattern.json ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
-( select(.type == "index-pattern") | .attributes.fields |= '${p_what}' | . )
+( select(.type == "index-pattern") | .attributes.fields |= '${p_jq_operation}' | . )
 ]' | \
     sed -e 's/  "____id":/  "_id":/' > ${g_file}
 
-g_file=${p_base}.config.json
+g_file=${o_outbase}.config.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${p_base}.config.json ${g_temp}
+mv ${o_outbase}.config.json ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
-( select(.type == "config") | .attributes | .["visualization:colorMapping"] |= '${p_what}' | . )
+( select(.type == "config") | .attributes | .["visualization:colorMapping"] |= '${p_jq_operation}' | . )
 ]' | \
     sed -e 's/  "____id":/  "_id":/' > ${g_file}
 
 # NYI for timelion-sheet
 
-
-
-#jq -s '.[]' ./toto.dashboard.json ./toto.visualization.json ./toto.search.json ./toto.index-pattern.json ./toto.config.json > ./toto.json
-jq '[ .[][] ]' ${p_base}.dashboard.json ${p_base}.visualization.json ${p_base}.search.json ${p_base}.index-pattern.json ${p_base}.config.json > ${p_base}.json
+jq '[ .[] ]' ${o_outbase}.dashboard.json ${o_outbase}.visualization.json ${o_outbase}.search.json ${o_outbase}.index-pattern.json ${o_outbase}.config.json > ${o_outbase}.json

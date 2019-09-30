@@ -1,16 +1,20 @@
-#! /bin/bash
+#! /usr/bin/env bash
 
-if [ -z "$1" ]
-then
-    echo "*** Missing file argument" >&2
-    exit 1
-fi
+g_script="$(readlink -f ${BASH_SOURCE[0]})"
+g_base="$(dirname ${g_script})"
 
-# ----------------------------------------------------------------------
+# options
+source ${g_base}/../bash-argsparse-1.8/argsparse.sh
+argsparse_use_option infile  "name of input file storing exported Kibana objects" short:i value mandatory
+argsparse_use_option outfile "name of output file to write (short) description"   short:o value mandatory
+argsparse_parse_options "$@"
 
-echo "--- Extracting dashboard infos from '$1'..."
-# "_source" "kibanaSavedObjectMeta" "searchSourceJSON" "filter" "meta" "index"
-cat $1 | \
+# let's go
+o_infile="${program_options[infile]}"
+o_outfile="${program_options[outfile]}"
+
+echo "--- Extracting dashboard infos from '${o_infile}'..."
+cat ${o_infile} | \
     jq '[ .[] |
 select(.type == "dashboard") | {
   "id": .id,
@@ -19,11 +23,11 @@ select(.type == "dashboard") | {
   "filter_queries": [ .attributes.kibanaSavedObjectMeta.searchSourceJSON.filter | first(.. | .query? // empty) ],
   "filter_fields": [ .attributes.kibanaSavedObjectMeta.searchSourceJSON.filter | .. | .field? | strings ],
   "filter_indices": [ .attributes.kibanaSavedObjectMeta.searchSourceJSON.filter | .. | .index? | strings ],
-  "panels": [ .attributes.panelsJSON | .. | .id? | strings ],
-} ]' > $1.dashboard
+  "panels": [ .attributes.panelsJSON | .. | .id? | strings ]
+} ]' | jq '.[]' | jq -s '[.[]]' > ${o_infile}.dashboard
 
-echo "--- Extracting viz infos from '$1'..."
-cat $1 | \
+echo "--- Extracting viz infos from '${o_infile}'..."
+cat ${o_infile} | \
     jq '[ .[] |
 select(.type == "visualization") | {
   "id": .id,
@@ -33,10 +37,10 @@ select(.type == "visualization") | {
   "queries": [ .attributes.visState | .. | .query? | strings ],
   "filter_queries": [ .attributes.kibanaSavedObjectMeta.searchSourceJSON.filter | first(.. | .query?) ],
   "filter_fields": [ .attributes.kibanaSavedObjectMeta.searchSourceJSON.filter | .. | .field? | strings ]
-} ]' > $1.visualization
+} ]' | jq '.[]' | jq -s '[.[]]' > ${o_infile}.visualization
 
-echo "--- Extracting search infos from '$1'..."
-cat $1 | \
+echo "--- Extracting search infos from '${o_infile}'..."
+cat ${o_infile} | \
     jq '[ .[] |
 select(.type == "search") | {
   "id": .id,
@@ -46,24 +50,26 @@ select(.type == "search") | {
   "index": .attributes.kibanaSavedObjectMeta.searchSourceJSON.index,
   "filter_queries": [ .attributes.kibanaSavedObjectMeta.searchSourceJSON | first(.. | .query?) ],
   "filter_fields": [ .attributes.kibanaSavedObjectMeta.searchSourceJSON.filter | .. | .field? | strings ]
-} ]' > $1.search
+} ]' | jq '.[]' | jq -s '[.[]]' > ${o_infile}.search
 
-echo "--- Extracting pattern infos from '$1'..."
-cat $1 | \
+echo "--- Extracting pattern infos from '${o_infile}'..."
+cat ${o_infile} | \
     jq '[ .[] |
 select(.type == "index-pattern") | {
   "id": .id,
   "type": "index-pattern",
   "title": .attributes.title
-} ]' > $1.index-pattern
+} ]' | jq '.[]' | jq -s '[.[]]' > ${o_infile}.index-pattern
 
 # --------------------------------------------------
-cat <<'EOF' | python3 - $1.dashboard $1.visualization $1.search $1.index-pattern > z.json
+echo "--- Merging into '${o_infile}'..."
+cat <<'EOF' | python3 - ${o_infile}.dashboard ${o_infile}.visualization ${o_infile}.search ${o_infile}.index-pattern > ${o_outfile}
 import json
 import sys
 
 def todict(p_filename):
   l_components = {}
+  #print(p_filename, file=sys.stderr)
   with open(p_filename, "r") as w_in:
     l_json = json.load(w_in)
     for c_obj in l_json:
@@ -93,28 +99,3 @@ for c_key, c_val in l_dashboards.items():
 
 print(json.dumps(list(l_dashboards.values()), indent=2))
 EOF
-
-exit
-
-------------------------------
-def dict(f):
-  reduce .[] as $o ({}; .[$o | f | tostring] = $o ) ;
-
-def dict_dash:
-  reduce .[] as $o ({}; { id: ($o | .id), value: ($o | .panels) } ) ;
-
-def replz(p; $d):
-  p | .[] | . |= $d[.id] ;
-
-($index_patterns | dict(.id)) as $pattern_dict |
-($visualizations | .[] | select(.index != null) | .index = $pattern_dict[.index]) as $vizs_with_index |
-([ $vizs_with_index ] | dict(.id)) as $viz_dict |
-($searchs | .[] | .index = $pattern_dict[.index]) as $searchs_with_index |
-([ $searchs_with_index ] | dict(.id)) as $search_dict |
-[ $search_dict, $viz_dict ] | .[] as $component_dict |
-$dashboards | .[]
-EOF
-
-
-exit
-
