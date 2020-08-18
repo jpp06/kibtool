@@ -13,7 +13,7 @@ argsparse_parse_options "$@"
 # let's go
 o_url="${program_options[esendpoint]}"
 o_space="${program_options[kibspace]}"
-o_outbase="${program_options[outbase]}"
+o_inbase="${program_options[inbase]}"
 
 if [ -z "${o_space}" ]
 then
@@ -29,24 +29,9 @@ then
   echo
 fi
 
-for c_type in visualization dashboard search index-pattern config timelion-sheet
-do
-  while
-    curl -s -k -u "${USER}:${PASSWORD}" \
-         -X GET \
-         "${o_url}${l_space_path}/api/saved_objects/_find?type=${c_type}&page=${l_page}" > "${o_outbase}.${c_type}.p${l_page}.json"
-    jq . "${o_outbase}.${c_type}.p${l_page}.json" > z ; mv z "${o_outbase}.${c_type}.p${l_page}.json"
-    l_count=$(jq ".saved_objects | length" "${o_outbase}.${c_type}.p${l_page}.json")
-    [[ ${l_count} != 0 ]]
-  do
-    l_page=$(( $l_page + 1))
-  done
-
-  for f in ${o_outbase}.${c_type}.p[0-9]*.json
-  do
-    jq '.saved_objects[]' $f
-  done | jq -s > ${o_outbase}.${c_type}.json
-  rm -f ${o_outbase}.${c_type}.p[0-9]*.json
-done
-
-rm -f ${o_outbase}.*.p[0-9]*.json
+echo "--- ${o_inbase}"
+grep -v updated_at ${o_inbase}.json > z.json
+curl -s -k -u "${USER}:${PASSWORD}" \
+     -X POST -H 'kbn-xsrf: true' -H 'Content-Type: application/json' --data-binary @"z.json" \
+     "${o_url}${l_space_path}/api/saved_objects/_bulk_create" | jq .
+echo

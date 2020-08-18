@@ -9,7 +9,7 @@ argsparse_use_option outbase     "base filename for storing exported Kibana obje
 argsparse_use_option unstringify "unstringify JSON values"                           short:u exclude:stringify
 argsparse_use_option stringify   "stringify JSON values"                             short:s exclude:unstringify
 argsparse_parse_options "$@"
-if ! argsparse_is_option_set unstringify && ! argsparse_is_option_set unstringify
+if ! argsparse_is_option_set unstringify && ! argsparse_is_option_set stringify
 then
   printf "One of 'stringify' or 'unstringify' is mandatory\n" >&2
   usage
