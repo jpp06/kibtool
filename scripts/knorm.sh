@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+set -e
+
 g_script="$(readlink -f ${BASH_SOURCE[0]})"
 g_base="$(dirname ${g_script})"
 
@@ -29,7 +31,7 @@ fi
 g_file=${o_outbase}.dashboard.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${o_outbase}.dashboard.json ${g_temp}
+mv ${g_file} ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
 ( select(.type == "dashboard") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_jq_operation}' | .attributes.panelsJSON |= '${p_jq_operation}' | .attributes.optionsJSON |= '${p_jq_operation}' | . )
@@ -39,7 +41,7 @@ cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | 
 g_file=${o_outbase}.visualization.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${o_outbase}.visualization.json ${g_temp}
+mv ${g_file} ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
 ( select(.type == "visualization") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_jq_operation}' | .attributes.visState |= '${p_jq_operation}' | .attributes.uiStateJSON |= '${p_jq_operation}' | . )
@@ -49,7 +51,7 @@ cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | 
 g_file=${o_outbase}.search.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${o_outbase}.search.json ${g_temp}
+mv ${g_file} ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
 ( select(.type == "search") | .attributes.kibanaSavedObjectMeta.searchSourceJSON |= '${p_jq_operation}' | . )
@@ -59,17 +61,17 @@ cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | 
 g_file=${o_outbase}.index-pattern.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${o_outbase}.index-pattern.json ${g_temp}
+mv ${g_file} ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
-( select(.type == "index-pattern") | .attributes.fields |= '${p_jq_operation}' | . )
+if .type == "index-pattern" and null != .attributes.fields then .attributes.fields |= '${p_jq_operation}' else . end
 ]' | \
     sed -e 's/  "____id":/  "_id":/' > ${g_file}
 
 g_file=${o_outbase}.config.json
 echo "--- Normalizing '${g_file}'..."
 g_temp=$(mktemp)
-mv ${o_outbase}.config.json ${g_temp}
+mv ${g_file} ${g_temp}
 cat ${g_temp} | sed -e 's/  "_id":/  "____id":/' | jq --indent 0 '.[]' | sort | \
     jq -s -S '[ .[] |
 ( select(.type == "config") | .attributes | .["visualization:colorMapping"] |= '${p_jq_operation}' | . )
